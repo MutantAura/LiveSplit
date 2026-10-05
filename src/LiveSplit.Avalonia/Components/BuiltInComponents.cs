@@ -2,8 +2,9 @@
 namespace LiveSplit.UI.Components;
 
 /// <summary>
-/// Registers the components that ship with this front end. Each one is registered under the
-/// file name of the Windows component it replaces, so existing layouts resolve to it.
+/// Registers the components and race providers that ship with this front end. Each one is
+/// registered under the file name of the Windows plugin it replaces, so existing layouts and
+/// settings resolve to it.
 /// </summary>
 public static class BuiltInComponents
 {
@@ -43,5 +44,7 @@ public static class BuiltInComponents
 
         ComponentManager.Register("LiveSplit.BlankSpace.dll",
             new SimpleComponentFactory("Blank Space", "Adds blank space to the layout.", ComponentCategory.Other, _ => new BlankSpace()));
+
+        ComponentManager.RaceProviderFactories[Racetime.RacetimeSettings.PluginName] = new Racetime.RacetimeFactory();
     }
 }
