@@ -65,6 +65,8 @@ public class ThemeTests
     [InlineData(AppTheme.WinUI, ThemeMode.Light)]
     [InlineData(AppTheme.Libadwaita, ThemeMode.Dark)]
     [InlineData(AppTheme.Libadwaita, ThemeMode.Light)]
+    [InlineData(AppTheme.MacOS, ThemeMode.Dark)]
+    [InlineData(AppTheme.MacOS, ThemeMode.Light)]
     public void ThemedWindowsRender(AppTheme theme, ThemeMode mode)
     {
         AppTheme previousTheme = ThemeManager.Theme;
@@ -85,6 +87,16 @@ public class ThemeTests
         {
             ThemeManager.Apply(previousTheme, previousMode);
         }
+    }
+
+    [Theory]
+    [InlineData(true, false, false, AppTheme.Fluent)]
+    [InlineData(true, true, false, AppTheme.WinUI)]
+    [InlineData(false, false, true, AppTheme.MacOS)]
+    [InlineData(false, false, false, AppTheme.Libadwaita)]
+    public void DefaultsToThePlatformTheme(bool isWindows, bool isWindows11, bool isMacOS, AppTheme expected)
+    {
+        Assert.Equal(expected, ThemeManager.GetPlatformDefault(isWindows, isWindows11, isMacOS));
     }
 
     [AvaloniaFact]
@@ -112,6 +124,12 @@ public class ThemeTests
             Assert.Equal(Avalonia.Media.Color.Parse("#F3F3F3"), ((Avalonia.Media.ISolidColorBrush)background).Color);
             Dispatcher.UIThread.RunJobs();
             Assert.Equal(Avalonia.Media.Color.Parse("#F3F3F3"), ((Avalonia.Media.ISolidColorBrush)window.Background).Color);
+
+            ThemeManager.Apply(AppTheme.MacOS, ThemeMode.Light);
+            Assert.True(window.TryFindResource("SystemAccentColor", window.ActualThemeVariant, out object accent));
+            Assert.Equal(Avalonia.Media.Color.Parse("#007AFF"), accent);
+            Dispatcher.UIThread.RunJobs();
+            Assert.Equal(Avalonia.Media.Color.Parse("#ECECEC"), ((Avalonia.Media.ISolidColorBrush)window.Background).Color);
 
             window.Close();
         }

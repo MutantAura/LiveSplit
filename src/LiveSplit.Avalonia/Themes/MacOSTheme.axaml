@@ -1,0 +1,296 @@
+<!--
+  macOS (AppKit, Sonoma/Sequoia) look, layered on top of Avalonia's Fluent theme.
+  Colors follow AppKit's semantic colors (windowBackgroundColor, labelColor,
+  controlAccentColor, ...) with the default blue accent. Controls use the regular control
+  size: 13pt system font, compact heights and 6px corners. Push buttons are white
+  (light) or gray (dark) with a hairline border, the default button is filled with the accent,
+  menu rows are highlighted with the accent, text fields show an accent focus ring and tabs
+  look like a centered segmented control. The font is the system font (SF Pro), falling back to
+  Helvetica Neue and then the bundled Inter.
+-->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="LiveSplit.Themes.MacOSTheme">
+
+  <Styles.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+
+        <ResourceDictionary x:Key="Light">
+          <!-- controlAccentColor (blue) -->
+          <Color x:Key="SystemAccentColor">#007AFF</Color>
+          <Color x:Key="SystemAccentColorDark1">#0062CC</Color>
+          <Color x:Key="SystemAccentColorDark2">#004EA3</Color>
+          <Color x:Key="SystemAccentColorDark3">#003A7A</Color>
+          <Color x:Key="SystemAccentColorLight1">#3395FF</Color>
+          <Color x:Key="SystemAccentColorLight2">#66AFFF</Color>
+          <Color x:Key="SystemAccentColorLight3">#99CAFF</Color>
+
+          <!-- windowBackgroundColor / labelColor / secondaryLabelColor.
+               Fluent paints windows with SystemRegionBrush. -->
+          <Color x:Key="SystemRegionColor">#ECECEC</Color>
+          <SolidColorBrush x:Key="SystemRegionBrush" Color="#ECECEC" />
+          <SolidColorBrush x:Key="SystemControlBackgroundAltHighBrush" Color="#ECECEC" />
+          <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrush" Color="#262626" />
+          <SolidColorBrush x:Key="SystemControlForegroundBaseMediumBrush" Color="#808080" />
+
+          <!-- Push button: white with a hairline border, no hover state. -->
+          <SolidColorBrush x:Key="ButtonBackground" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#E2E2E2" />
+          <SolidColorBrush x:Key="ButtonBackgroundDisabled" Color="#F5F5F5" />
+          <SolidColorBrush x:Key="ButtonBorderBrush" Color="#C8C8C8" />
+          <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#C8C8C8" />
+          <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#BDBDBD" />
+          <SolidColorBrush x:Key="ButtonBorderBrushDisabled" Color="#DCDCDC" />
+          <SolidColorBrush x:Key="ButtonForeground" Color="#262626" />
+          <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#262626" />
+          <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#262626" />
+
+          <!-- Default button -->
+          <SolidColorBrush x:Key="AccentButtonBackground" Color="#007AFF" />
+          <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="#007AFF" />
+          <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="#0062CC" />
+          <SolidColorBrush x:Key="AccentButtonBorderBrush" Color="#006EE6" />
+          <SolidColorBrush x:Key="AccentButtonBorderBrushPointerOver" Color="#006EE6" />
+          <SolidColorBrush x:Key="AccentButtonBorderBrushPressed" Color="#0058B8" />
+          <SolidColorBrush x:Key="AccentButtonForeground" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="#FFFFFF" />
+
+          <!-- Text field: textBackgroundColor with a bezel; focus ring is the accent at 50%. -->
+          <SolidColorBrush x:Key="TextControlBackground" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="TextControlBorderBrush" Color="#C8C8C8" />
+          <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#C8C8C8" />
+          <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#80007AFF" />
+          <SolidColorBrush x:Key="TextControlForeground" Color="#262626" />
+          <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#262626" />
+
+          <!-- Pop-up button -->
+          <SolidColorBrush x:Key="ComboBoxBackground" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#E2E2E2" />
+          <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#C8C8C8" />
+          <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="#C8C8C8" />
+          <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="#BDBDBD" />
+          <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#F6F6F6" />
+          <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#D0D0D0" />
+
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUnchecked" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="#B4B4B4" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" Color="#A0A0A0" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="#007AFF" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="#007AFF" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" Color="#0062CC" />
+          <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundChecked" Color="#FFFFFF" />
+
+          <!-- Menus: light material with solid accent row highlights. -->
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#F6F6F6" />
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#D0D0D0" />
+          <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#007AFF" />
+          <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#0062CC" />
+          <SolidColorBrush x:Key="MenuFlyoutItemForegroundPointerOver" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="MenuFlyoutItemForegroundPressed" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForegroundPointerOver" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="MenuFlyoutSubItemChevronPointerOver" Color="#FFFFFF" />
+
+          <SolidColorBrush x:Key="SystemControlHighlightListLowBrush" Color="#E2E2E2" />
+          <SolidColorBrush x:Key="SystemControlHighlightListAccentLowBrush" Color="#33007AFF" />
+          <SolidColorBrush x:Key="SystemControlHighlightListAccentMediumBrush" Color="#40007AFF" />
+          <SolidColorBrush x:Key="SystemControlHighlightListAccentHighBrush" Color="#4D007AFF" />
+
+          <!-- Segmented control -->
+          <SolidColorBrush x:Key="TabItemHeaderBackgroundUnselected" Color="Transparent" />
+          <SolidColorBrush x:Key="TabItemHeaderBackgroundUnselectedPointerOver" Color="#DCDCDC" />
+          <SolidColorBrush x:Key="TabItemHeaderBackgroundUnselectedPressed" Color="#D0D0D0" />
+          <SolidColorBrush x:Key="TabItemHeaderBackgroundSelected" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="TabItemHeaderBackgroundSelectedPointerOver" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="TabItemHeaderBackgroundSelectedPressed" Color="#F2F2F2" />
+          <SolidColorBrush x:Key="TabItemHeaderForegroundUnselected" Color="#262626" />
+          <SolidColorBrush x:Key="TabItemHeaderForegroundUnselectedPointerOver" Color="#262626" />
+          <SolidColorBrush x:Key="TabItemHeaderForegroundSelected" Color="#262626" />
+          <SolidColorBrush x:Key="TabItemHeaderForegroundSelectedPointerOver" Color="#262626" />
+          <SolidColorBrush x:Key="TabItemHeaderSelectedPipeFill" Color="Transparent" />
+          <SolidColorBrush x:Key="MacOSSegmentedTrackBrush" Color="#E3E3E3" />
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Dark">
+          <Color x:Key="SystemAccentColor">#0A84FF</Color>
+          <Color x:Key="SystemAccentColorDark1">#0070E0</Color>
+          <Color x:Key="SystemAccentColorDark2">#005CBF</Color>
+          <Color x:Key="SystemAccentColorDark3">#00489E</Color>
+          <Color x:Key="SystemAccentColorLight1">#3B9BFF</Color>
+          <Color x:Key="SystemAccentColorLight2">#6CB3FF</Color>
+          <Color x:Key="SystemAccentColorLight3">#9DCBFF</Color>
+
+          <Color x:Key="SystemRegionColor">#2B2B2B</Color>
+          <SolidColorBrush x:Key="SystemRegionBrush" Color="#2B2B2B" />
+          <SolidColorBrush x:Key="SystemControlBackgroundAltHighBrush" Color="#2B2B2B" />
+          <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrush" Color="#E5E5E5" />
+          <SolidColorBrush x:Key="SystemControlForegroundBaseMediumBrush" Color="#9B9B9B" />
+
+          <SolidColorBrush x:Key="ButtonBackground" Color="#5C5C5C" />
+          <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#5C5C5C" />
+          <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#757575" />
+          <SolidColorBrush x:Key="ButtonBackgroundDisabled" Color="#3C3C3C" />
+          <SolidColorBrush x:Key="ButtonBorderBrush" Color="#5C5C5C" />
+          <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#5C5C5C" />
+          <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#757575" />
+          <SolidColorBrush x:Key="ButtonBorderBrushDisabled" Color="#3C3C3C" />
+          <SolidColorBrush x:Key="ButtonForeground" Color="#E5E5E5" />
+          <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#E5E5E5" />
+          <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#FFFFFF" />
+
+          <SolidColorBrush x:Key="AccentButtonBackground" Color="#0A84FF" />
+          <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="#0A84FF" />
+          <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="#0070E0" />
+          <SolidColorBrush x:Key="AccentButtonBorderBrush" Color="#0A84FF" />
+          <SolidColorBrush x:Key="AccentButtonBorderBrushPointerOver" Color="#0A84FF" />
+          <SolidColorBrush x:Key="AccentButtonBorderBrushPressed" Color="#0070E0" />
+          <SolidColorBrush x:Key="AccentButtonForeground" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="#FFFFFF" />
+
+          <SolidColorBrush x:Key="TextControlBackground" Color="#3A3A3A" />
+          <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#3A3A3A" />
+          <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#3A3A3A" />
+          <SolidColorBrush x:Key="TextControlBorderBrush" Color="#505050" />
+          <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#505050" />
+          <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#800A84FF" />
+          <SolidColorBrush x:Key="TextControlForeground" Color="#E5E5E5" />
+          <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#E5E5E5" />
+
+          <SolidColorBrush x:Key="ComboBoxBackground" Color="#5C5C5C" />
+          <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#5C5C5C" />
+          <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#757575" />
+          <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#5C5C5C" />
+          <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="#5C5C5C" />
+          <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="#757575" />
+          <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#2E2E2E" />
+          <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#4A4A4A" />
+
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUnchecked" Color="#3E3E3E" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" Color="#3E3E3E" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="#6A6A6A" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" Color="#7A7A7A" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="#0A84FF" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="#0A84FF" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" Color="#0070E0" />
+          <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundChecked" Color="#FFFFFF" />
+
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#2E2E2E" />
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#4A4A4A" />
+          <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#0A84FF" />
+          <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#0070E0" />
+          <SolidColorBrush x:Key="MenuFlyoutItemForegroundPointerOver" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="MenuFlyoutItemForegroundPressed" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForegroundPointerOver" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="MenuFlyoutSubItemChevronPointerOver" Color="#FFFFFF" />
+
+          <SolidColorBrush x:Key="SystemControlHighlightListLowBrush" Color="#363636" />
+          <SolidColorBrush x:Key="SystemControlHighlightListAccentLowBrush" Color="#400A84FF" />
+          <SolidColorBrush x:Key="SystemControlHighlightListAccentMediumBrush" Color="#4D0A84FF" />
+          <SolidColorBrush x:Key="SystemControlHighlightListAccentHighBrush" Color="#5A0A84FF" />
+
+          <SolidColorBrush x:Key="TabItemHeaderBackgroundUnselected" Color="Transparent" />
+          <SolidColorBrush x:Key="TabItemHeaderBackgroundUnselectedPointerOver" Color="#404040" />
+          <SolidColorBrush x:Key="TabItemHeaderBackgroundUnselectedPressed" Color="#4A4A4A" />
+          <SolidColorBrush x:Key="TabItemHeaderBackgroundSelected" Color="#636363" />
+          <SolidColorBrush x:Key="TabItemHeaderBackgroundSelectedPointerOver" Color="#636363" />
+          <SolidColorBrush x:Key="TabItemHeaderBackgroundSelectedPressed" Color="#6E6E6E" />
+          <SolidColorBrush x:Key="TabItemHeaderForegroundUnselected" Color="#E5E5E5" />
+          <SolidColorBrush x:Key="TabItemHeaderForegroundUnselectedPointerOver" Color="#E5E5E5" />
+          <SolidColorBrush x:Key="TabItemHeaderForegroundSelected" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="TabItemHeaderForegroundSelectedPointerOver" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="TabItemHeaderSelectedPipeFill" Color="Transparent" />
+          <SolidColorBrush x:Key="MacOSSegmentedTrackBrush" Color="#363636" />
+        </ResourceDictionary>
+
+      </ResourceDictionary.ThemeDictionaries>
+
+      <CornerRadius x:Key="ControlCornerRadius">6</CornerRadius>
+      <CornerRadius x:Key="OverlayCornerRadius">8</CornerRadius>
+      <FontFamily x:Key="ContentControlThemeFontFamily">.AppleSystemUIFont, SF Pro Text, Helvetica Neue, fonts:Inter#Inter</FontFamily>
+      <x:Double x:Key="ControlContentThemeFontSize">13</x:Double>
+      <x:Double x:Key="TabItemHeaderFontSize">13</x:Double>
+      <x:Double x:Key="TextControlThemeMinHeight">24</x:Double>
+      <Thickness x:Key="TextControlThemePadding">6,3,6,3</Thickness>
+      <x:Double x:Key="ComboBoxMinHeight">24</x:Double>
+      <Thickness x:Key="MenuFlyoutPresenterThemePadding">5</Thickness>
+    </ResourceDictionary>
+  </Styles.Resources>
+
+  <Style Selector="Window">
+    <Setter Property="FontFamily" Value="{DynamicResource ContentControlThemeFontFamily}" />
+    <Setter Property="FontSize" Value="13" />
+  </Style>
+
+  <!-- Regular-size controls -->
+  <Style Selector="Button, ToggleButton, RepeatButton">
+    <Setter Property="Padding" Value="12,3" />
+    <Setter Property="MinHeight" Value="24" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <!-- The default button is filled with the accent. -->
+  <Style Selector="Button[IsDefault=True] /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource AccentButtonBackground}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorderBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentButtonForeground}" />
+  </Style>
+  <Style Selector="Button[IsDefault=True]:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource AccentButtonBackgroundPointerOver}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorderBrushPointerOver}" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentButtonForegroundPointerOver}" />
+  </Style>
+  <Style Selector="Button[IsDefault=True]:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource AccentButtonBackgroundPressed}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorderBrushPressed}" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentButtonForegroundPressed}" />
+  </Style>
+
+  <Style Selector="ComboBox">
+    <Setter Property="Padding" Value="9,2,6,2" />
+    <Setter Property="MinHeight" Value="24" />
+  </Style>
+  <Style Selector="TextBox, AutoCompleteBox">
+    <Setter Property="MinHeight" Value="24" />
+  </Style>
+  <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+    <Setter Property="BorderThickness" Value="2" />
+  </Style>
+  <Style Selector="CheckBox">
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="MinHeight" Value="24" />
+  </Style>
+
+  <!-- Menus: compact rows inset from the edge. -->
+  <Style Selector="MenuItem">
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Padding" Value="10,3" />
+    <Setter Property="MinHeight" Value="22" />
+  </Style>
+
+  <!-- Tabs as a centered segmented control. -->
+  <Style Selector="TabControl /template/ ItemsPresenter#PART_ItemsPresenter">
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="Margin" Value="0,0,0,8" />
+  </Style>
+  <Style Selector="TabControl /template/ ItemsPresenter#PART_ItemsPresenter > WrapPanel">
+    <Setter Property="Background" Value="{DynamicResource MacOSSegmentedTrackBrush}" />
+  </Style>
+  <Style Selector="TabItem">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="FontWeight" Value="Normal" />
+    <Setter Property="MinHeight" Value="24" />
+    <Setter Property="Padding" Value="14,0" />
+    <Setter Property="Margin" Value="2" />
+    <Setter Property="CornerRadius" Value="5" />
+  </Style>
+  <Style Selector="TabItem /template/ Border#PART_SelectedPipe">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+
+</Styles>

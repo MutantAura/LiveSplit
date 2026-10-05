@@ -100,6 +100,7 @@
           <SolidColorBrush x:Key="TabItemHeaderForegroundUnselectedPointerOver" Color="#333338" />
           <SolidColorBrush x:Key="TabItemHeaderForegroundSelected" Color="#333338" />
           <SolidColorBrush x:Key="TabItemHeaderForegroundSelectedPointerOver" Color="#333338" />
+          <SolidColorBrush x:Key="TabItemHeaderSelectedPipeFill" Color="Transparent" />
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Dark">
@@ -182,6 +183,7 @@
           <SolidColorBrush x:Key="TabItemHeaderForegroundUnselectedPointerOver" Color="#FFFFFF" />
           <SolidColorBrush x:Key="TabItemHeaderForegroundSelected" Color="#FFFFFF" />
           <SolidColorBrush x:Key="TabItemHeaderForegroundSelectedPointerOver" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="TabItemHeaderSelectedPipeFill" Color="Transparent" />
         </ResourceDictionary>
 
       </ResourceDictionary.ThemeDictionaries>

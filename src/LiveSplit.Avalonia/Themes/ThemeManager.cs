@@ -1,12 +1,13 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
 using Avalonia.Styling;
 using LiveSplit.Options;
 using LiveSplit.View;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
 
 namespace LiveSplit.Themes;
@@ -19,7 +20,8 @@ public enum AppTheme
 {
     Fluent,
     WinUI,
-    Libadwaita
+    Libadwaita,
+    MacOS
 }
 
 public enum ThemeMode
@@ -33,25 +35,49 @@ public enum ThemeMode
 /// Applies and persists the selected theme. Themes are style layers on top of the Fluent theme
 /// that override its resources, so every control keeps working the same way. The selection is
 /// stored in appearance.xml next to settings.cfg, which stays compatible with the Windows version.
+/// Unless the user picks another theme, the one matching the operating system is used.
 /// </summary>
 public static class ThemeManager
 {
     private const string FileName = "appearance.xml";
 
+    private static readonly List<Window> openWindows = [];
     private static Styles activeLayer;
     private static bool openedHandlerRegistered;
 
-    public static AppTheme Theme { get; private set; } = AppTheme.Fluent;
+    public static AppTheme PlatformDefault { get; } = GetPlatformDefault(
+        OperatingSystem.IsWindows(),
+        OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000),
+        OperatingSystem.IsMacOS());
+
+    public static AppTheme Theme { get; private set; } = PlatformDefault;
     public static ThemeMode Mode { get; private set; } = ThemeMode.Dark;
+
+    /// <summary>
+    /// The theme that looks native: Fluent on Windows 10, WinUI 3 on Windows 11, the macOS
+    /// theme on macOS and Libadwaita on Linux and other systems.
+    /// </summary>
+    internal static AppTheme GetPlatformDefault(bool isWindows, bool isWindows11, bool isMacOS)
+    {
+        if (isWindows)
+        {
+            return isWindows11 ? AppTheme.WinUI : AppTheme.Fluent;
+        }
+
+        return isMacOS ? AppTheme.MacOS : AppTheme.Libadwaita;
+    }
 
     public static string DisplayName(AppTheme theme)
     {
-        return theme switch
+        string name = theme switch
         {
             AppTheme.WinUI => "WinUI 3",
             AppTheme.Libadwaita => "Libadwaita",
-            _ => "Fluent (default)"
+            AppTheme.MacOS => "macOS",
+            _ => "Fluent"
         };
+
+        return theme == PlatformDefault ? name + " (default)" : name;
     }
 
     public static string DisplayName(ThemeMode mode)
@@ -97,11 +123,22 @@ public static class ThemeManager
         if (!openedHandlerRegistered)
         {
             openedHandlerRegistered = true;
+
+            // Track open windows here rather than through the application lifetime, which only
+            // exists for classic desktop apps (and not, for example, in headless tests).
             Window.WindowOpenedEvent.AddClassHandler(typeof(Window), (sender, e) =>
+            {
+                if (sender is Window window && !openWindows.Contains(window))
+                {
+                    openWindows.Add(window);
+                    Decorate(window);
+                }
+            });
+            Window.WindowClosedEvent.AddClassHandler(typeof(Window), (sender, e) =>
             {
                 if (sender is Window window)
                 {
-                    Decorate(window);
+                    openWindows.Remove(window);
                 }
             });
         }
@@ -116,7 +153,14 @@ public static class ThemeManager
             var document = new XmlDocument();
             XmlElement root = document.CreateElement("Appearance");
             document.AppendChild(root);
-            root.AppendChild(document.CreateElement("Theme")).InnerText = Theme.ToString();
+
+            // The platform's theme isn't stored, so it keeps following the platform (e.g. after
+            // upgrading from Windows 10 to 11) until the user picks a different one.
+            if (Theme != PlatformDefault)
+            {
+                root.AppendChild(document.CreateElement("Theme")).InnerText = Theme.ToString();
+            }
+
             root.AppendChild(document.CreateElement("Mode")).InnerText = Mode.ToString();
             document.Save(FilePath);
         }
@@ -157,6 +201,7 @@ public static class ThemeManager
         {
             AppTheme.WinUI => new WinUITheme(),
             AppTheme.Libadwaita => new LibadwaitaTheme(),
+            AppTheme.MacOS => new MacOSTheme(),
             _ => null
         };
 
@@ -165,12 +210,9 @@ public static class ThemeManager
             app.Styles.Add(activeLayer);
         }
 
-        if (app.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        foreach (Window window in openWindows.ToList())
         {
-            foreach (Window window in desktop.Windows)
-            {
-                Decorate(window);
-            }
+            Decorate(window);
         }
     }
 
