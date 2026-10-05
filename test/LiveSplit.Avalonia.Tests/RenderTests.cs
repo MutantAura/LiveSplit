@@ -1,5 +1,7 @@
 using Avalonia.Headless;
+using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -173,6 +175,59 @@ public class RenderTests
         byte[] after = Pixels(window);
         Capture(window, "font-changed-" + font);
         Assert.NotEqual(before, after);
+    }
+
+    private static byte[] TopRows(TimerWindow window, int rows)
+    {
+        byte[] pixels = Pixels(window);
+        return pixels[..(pixels.Length / (int)window.Bounds.Height * rows)];
+    }
+
+    /// <summary>
+    /// Regression test: a component's font override (e.g. a Title with its own text font, as
+    /// set by the Windows version) takes precedence over the layout font and can be turned off
+    /// from the layout editor's component settings.
+    /// </summary>
+    [AvaloniaFact]
+    public void ComponentFontOverridesCanBeEdited()
+    {
+        TimerWindow window = OpenWindow(Path.Combine(Fixtures.RepoRoot, "src", "LiveSplit.View", "Resources", "DefaultLayout.lsl"));
+        var title = (UI.Components.LayoutComponent)window.Layout.LayoutComponents.First(x => x.Path == "LiveSplit.Title.dll");
+        title.FontOverrides.OverrideTextFont = true;
+        title.FontOverrides.TextFont = new Drawing.Font("Times New Roman", 18, Drawing.FontStyle.Regular, Drawing.GraphicsUnit.Pixel);
+
+        // The title (top rows, above the first split) ignores the layout's text font while it is overridden.
+        byte[] before = TopRows(window, 28);
+        window.Layout.Settings.TextFont = new Drawing.Font("Courier New", 24, Drawing.FontStyle.Italic, Drawing.GraphicsUnit.Pixel);
+        Assert.Equal(before, TopRows(window, 28));
+
+        // The Title only uses the text font, so only that override is offered.
+        // (The logical tree can list tab content more than once, hence Distinct.)
+        var editor = new LayoutEditorWindow(window.CurrentState, () => { });
+        editor.Show();
+        Dispatcher.UIThread.RunJobs();
+        List<CheckBox> overrides = [.. editor.GetLogicalDescendants().OfType<CheckBox>().Distinct().Where(x => (x.Content as string)?.StartsWith("Override ") == true && (x.Content as string).EndsWith(" Font"))];
+        CheckBox textOverride = Assert.Single(overrides);
+        Assert.Equal("Override Text Font", textOverride.Content);
+        Assert.True(textOverride.IsChecked);
+
+        for (int i = 0; i < 4; i++)
+        {
+            Dispatcher.UIThread.RunJobs();
+            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+        }
+
+        using (WriteableBitmap frame = editor.CaptureRenderedFrame())
+        {
+            frame.Save(Path.Combine(Fixtures.ScreenshotDirectory, "layout-editor-font-overrides.png"));
+        }
+
+        textOverride.IsChecked = false;
+        Dispatcher.UIThread.RunJobs();
+        editor.Close();
+
+        Assert.False(title.FontOverrides.OverrideTextFont);
+        Assert.NotEqual(before, TopRows(window, 28));
     }
 
     /// <summary>

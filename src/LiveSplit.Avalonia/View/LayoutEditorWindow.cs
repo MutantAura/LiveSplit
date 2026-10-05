@@ -10,7 +10,9 @@ using LiveSplit.UI.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
+using DrawingFont = LiveSplit.Drawing.Font;
 
 namespace LiveSplit.View;
 
@@ -175,7 +177,8 @@ public sealed class LayoutEditorWindow : Window
             return;
         }
 
-        IComponent component = Layout.LayoutComponents[index].Component;
+        ILayoutComponent layoutComponent = Layout.LayoutComponents[index];
+        IComponent component = layoutComponent.Component;
         Control control = null;
         try
         {
@@ -186,14 +189,36 @@ public sealed class LayoutEditorWindow : Window
             Log.Error(ex);
         }
 
+        GlobalFont usedFonts = component.GetType().GetCustomAttribute<GlobalFontConsumerAttribute>()?.UsedGlobalFonts ?? GlobalFont.None;
+        Control fontOverrides = layoutComponent is LayoutComponent withOverrides && usedFonts != GlobalFont.None
+            ? CreateFontOverridesEditor(withOverrides.FontOverrides, usedFonts)
+            : null;
+
         try
         {
-            settingsHost.Content = control ?? new TextBlock
+            control ??= fontOverrides == null
+                ? new TextBlock
+                {
+                    Text = "This component has no settings.",
+                    Margin = new Thickness(8),
+                    Foreground = Brushes.Gray
+                }
+                : null;
+
+            if (fontOverrides != null)
             {
-                Text = "This component has no settings.",
-                Margin = new Thickness(8),
-                Foreground = Brushes.Gray
-            };
+                var panel = new DockPanel();
+                DockPanel.SetDock(fontOverrides, Dock.Bottom);
+                panel.Children.Add(fontOverrides);
+                if (control != null)
+                {
+                    panel.Children.Add(control);
+                }
+
+                control = panel;
+            }
+
+            settingsHost.Content = control;
         }
         catch (Exception ex)
         {
@@ -275,5 +300,98 @@ public sealed class LayoutEditorWindow : Window
     private Control CreateLayoutSettingsEditor()
     {
         return SettingsEditor.Create(Layout.Settings, state, _ => changed());
+    }
+
+    /// <summary>
+    /// Per-component replacements for the layout's fonts, for the fonts the component uses.
+    /// Like in the Windows version, the font can only be picked while the override is enabled,
+    /// and the layout's font is shown otherwise.
+    /// </summary>
+    private Control CreateFontOverridesEditor(FontOverrides overrides, GlobalFont usedFonts)
+    {
+        var grid = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("Auto,*"),
+            RowSpacing = 6,
+            ColumnSpacing = 12
+        };
+
+        int row = 0;
+        void AddRow(string name, Func<bool> isOverridden, Action<bool> setOverridden, Func<DrawingFont> getFont, Action<DrawingFont> setFont, Func<DrawingFont> getLayoutFont)
+        {
+            var check = new CheckBox { Content = $"Override {name}", IsChecked = isOverridden() };
+            var button = new Button { HorizontalAlignment = HorizontalAlignment.Left };
+
+            void Refresh()
+            {
+                bool overridden = check.IsChecked == true;
+                button.IsEnabled = overridden;
+                button.Content = overridden && getFont() != null
+                    ? SettingsEditor.Describe(getFont())
+                    : $"Using layout font: {SettingsEditor.Describe(getLayoutFont())}";
+            }
+
+            check.IsCheckedChanged += (s, e) =>
+            {
+                bool overridden = check.IsChecked == true;
+                setOverridden(overridden);
+                if (overridden && getFont() == null)
+                {
+                    // Start from the layout's font so the override is visible right away.
+                    setFont((DrawingFont)getLayoutFont().Clone());
+                }
+
+                Refresh();
+                changed();
+            };
+            button.Click += async (s, e) =>
+            {
+                DrawingFont font = await FontDialog.Show(this, getFont() ?? getLayoutFont());
+                if (font != null)
+                {
+                    setFont(font);
+                    Refresh();
+                    changed();
+                }
+            };
+            Refresh();
+
+            grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+            Grid.SetRow(check, row);
+            Grid.SetRow(button, row);
+            Grid.SetColumn(button, 1);
+            grid.Children.Add(check);
+            grid.Children.Add(button);
+            row++;
+        }
+
+        if (usedFonts.HasFlag(GlobalFont.TimerFont))
+        {
+            AddRow("Timer Font", () => overrides.OverrideTimerFont, x => overrides.OverrideTimerFont = x,
+                () => overrides.TimerFont, x => overrides.TimerFont = x, () => Layout.Settings.TimerFont);
+        }
+
+        if (usedFonts.HasFlag(GlobalFont.TimesFont))
+        {
+            AddRow("Times Font", () => overrides.OverrideTimesFont, x => overrides.OverrideTimesFont = x,
+                () => overrides.TimesFont, x => overrides.TimesFont = x, () => Layout.Settings.TimesFont);
+        }
+
+        if (usedFonts.HasFlag(GlobalFont.TextFont))
+        {
+            AddRow("Text Font", () => overrides.OverrideTextFont, x => overrides.OverrideTextFont = x,
+                () => overrides.TextFont, x => overrides.TextFont = x, () => Layout.Settings.TextFont);
+        }
+
+        return new StackPanel
+        {
+            Margin = new Thickness(8, 12, 8, 8),
+            Spacing = 8,
+            Children =
+            {
+                new TextBlock { Text = "Font Overrides", FontWeight = FontWeight.Bold },
+                grid
+            }
+        };
     }
 }
