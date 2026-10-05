@@ -44,6 +44,8 @@
     <Project Path="lib/WinForms Color Picker/WinFormsColor/WinFormsColor.csproj" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/LiveSplit.Avalonia.Core/LiveSplit.Avalonia.Core.csproj" />
+    <Project Path="src/LiveSplit.Avalonia/LiveSplit.Avalonia.csproj" />
     <Project Path="src/LiveSplit.Core/LiveSplit.Core.csproj" />
     <Project Path="src/LiveSplit.Register/LiveSplit.Register.csproj" />
     <Project Path="src/LiveSplit.View/LiveSplit.View.csproj" />
@@ -79,6 +81,7 @@
     <Project Path="src/UpdateManager/UpdateManager.csproj" />
   </Folder>
   <Folder Name="/test/">
+    <Project Path="test/LiveSplit.Avalonia.Tests/LiveSplit.Avalonia.Tests.csproj" />
     <Project Path="test/LiveSplit.Tests/LiveSplit.Tests.csproj" />
   </Folder>
 </Solution>
