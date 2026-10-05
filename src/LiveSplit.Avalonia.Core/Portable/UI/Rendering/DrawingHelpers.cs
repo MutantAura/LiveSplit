@@ -3,6 +3,7 @@ using Avalonia.Media;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using AvaloniaColor = Avalonia.Media.Color;
 using DrawingColor = System.Drawing.Color;
 using DrawingFont = LiveSplit.Drawing.Font;
@@ -127,6 +128,8 @@ public static class DrawingHelpers
         return typeface;
     }
 
+    private static HashSet<string> systemFamilies;
+
     private static bool IsInstalled(string familyName)
     {
         if (string.IsNullOrEmpty(familyName))
@@ -136,10 +139,24 @@ public static class DrawingHelpers
 
         try
         {
-            // The font manager silently substitutes a default family for unknown names, so
-            // check that the resolved family is the requested one.
-            return FontManager.Current.TryGetGlyphTypeface(new Typeface(familyName), out GlyphTypeface glyphTypeface)
-                && string.Equals(glyphTypeface.FamilyName, familyName, StringComparison.OrdinalIgnoreCase);
+            if (!FontManager.Current.TryGetGlyphTypeface(new Typeface(familyName), out GlyphTypeface glyphTypeface))
+            {
+                return false;
+            }
+
+            if (string.Equals(glyphTypeface.FamilyName, familyName, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            // The font manager silently substitutes its default family for unknown names, so a
+            // different family name usually means the font is missing. But many installed fonts
+            // are listed under a shorter family name than the one stored in the font (e.g.
+            // "Arial Rounded MT" is "Arial Rounded MT Bold", "Segoe UI Variable Text" is
+            // "Segoe UI Variable"); accept those, as long as they didn't resolve to the default.
+            systemFamilies ??= new HashSet<string>(FontManager.Current.SystemFonts.Select(x => x.Name), StringComparer.OrdinalIgnoreCase);
+            return systemFamilies.Contains(familyName)
+                && !string.Equals(glyphTypeface.FamilyName, FontManager.Current.DefaultFontFamily.Name, StringComparison.OrdinalIgnoreCase);
         }
         catch
         {

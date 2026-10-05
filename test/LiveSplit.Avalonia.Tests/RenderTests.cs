@@ -1,11 +1,15 @@
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using LiveSplit.Model;
+using LiveSplit.UI;
 using LiveSplit.View;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Xunit;
 
@@ -120,6 +124,84 @@ public class RenderTests
         TimerWindow window = OpenWindow(Path.Combine(Fixtures.LayoutFiles, layout));
         SimulateRun(window, 6);
         Capture(window, Path.GetFileNameWithoutExtension(layout) + "-mid-run");
+    }
+
+    private static byte[] Pixels(TimerWindow window)
+    {
+        for (int i = 0; i < 8; i++)
+        {
+            window.Tick();
+            Dispatcher.UIThread.RunJobs();
+            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+        }
+
+        using WriteableBitmap frame = window.CaptureRenderedFrame();
+        using var buffer = frame.Lock();
+        byte[] pixels = new byte[buffer.RowBytes * buffer.Size.Height];
+        Marshal.Copy(buffer.Address, pixels, 0, pixels.Length);
+        return pixels;
+    }
+
+    /// <summary>
+    /// Regression test: changing a font in the layout settings must change what is drawn.
+    /// </summary>
+    [AvaloniaTheory]
+    [InlineData("TextFont")]
+    [InlineData("TimesFont")]
+    [InlineData("TimerFont")]
+    public void ChangingLayoutFontsChangesRendering(string font)
+    {
+        TimerWindow window = OpenWindow(Path.Combine(Fixtures.RepoRoot, "src", "LiveSplit.View", "Resources", "DefaultLayout.lsl"));
+        SimulateRun(window, 3);
+        byte[] before = Pixels(window);
+
+        Options.LayoutSettings settings = window.Layout.Settings;
+        var newFont = new Drawing.Font("Courier New", font == "TimerFont" ? 70 : 22, Drawing.FontStyle.Italic, Drawing.GraphicsUnit.Pixel);
+        switch (font)
+        {
+            case "TextFont":
+                settings.TextFont = newFont;
+                break;
+            case "TimesFont":
+                settings.TimesFont = newFont;
+                break;
+            default:
+                settings.TimerFont = newFont;
+                break;
+        }
+
+        byte[] after = Pixels(window);
+        Capture(window, "font-changed-" + font);
+        Assert.NotEqual(before, after);
+    }
+
+    /// <summary>
+    /// Regression test: every font offered by the font dialog must be drawn with that font, not
+    /// the fallback, including fonts listed under a shorter name than their stored family name
+    /// (e.g. "Arial Rounded MT" for "Arial Rounded MT Bold").
+    /// </summary>
+    [AvaloniaFact]
+    public void FontsOfferedByTheFontDialogAreUsed()
+    {
+        FontManager fonts = FontManager.Current;
+        var unresolved = new List<string>();
+        foreach (string name in fonts.SystemFonts.Select(x => x.Name).Distinct())
+        {
+            // Skip names the font manager itself can't load (it substitutes its default font).
+            if (!fonts.TryGetGlyphTypeface(new Typeface(name), out GlyphTypeface glyph)
+                || (glyph.FamilyName != name && glyph.FamilyName == fonts.DefaultFontFamily.Name))
+            {
+                continue;
+            }
+
+            Typeface typeface = DrawingHelpers.GetTypeface(new Drawing.Font(name, 16, Drawing.FontStyle.Regular, Drawing.GraphicsUnit.Pixel));
+            if (typeface.FontFamily.Name != name)
+            {
+                unresolved.Add($"{name} -> {typeface.FontFamily.Name}");
+            }
+        }
+
+        Assert.Empty(unresolved);
     }
 
     [AvaloniaFact]
