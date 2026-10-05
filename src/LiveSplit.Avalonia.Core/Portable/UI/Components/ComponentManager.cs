@@ -13,11 +13,6 @@ public interface IComponentFactory
     IComponent Create(LiveSplitState state);
 }
 
-public interface IRaceProviderFactory
-{
-    RaceProviderSettings CreateSettings();
-}
-
 /// <summary>
 /// Portable component registry. Instead of loading WinForms component DLLs from disk, factories
 /// are registered by the front end under the file name of the component they replace

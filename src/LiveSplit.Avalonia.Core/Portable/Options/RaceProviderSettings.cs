@@ -52,12 +52,29 @@ public class UnloadedRaceProviderSettings : RaceProviderSettings
     public override string WebsiteLink => null;
     public override string RulesLink => null;
 
+    private string Content { get; set; }
+
     public override object Clone()
     {
         return new UnloadedRaceProviderSettings
         {
             Name = Name,
-            Enabled = Enabled
+            Enabled = Enabled,
+            Content = Content
         };
+    }
+
+    public override void FromXml(XmlElement element, Version version)
+    {
+        base.FromXml(element, version);
+        Name = element.GetAttribute("name");
+        Content = element.InnerXml;
+    }
+
+    public override XmlElement ToXml(XmlDocument document)
+    {
+        XmlElement element = base.ToXml(document);
+        element.InnerXml = Content ?? "";
+        return element;
     }
 }

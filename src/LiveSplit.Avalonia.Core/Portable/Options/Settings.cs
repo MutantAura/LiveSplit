@@ -116,7 +116,7 @@ public class Settings : ISettings
             RecentLayouts = [.. RecentLayouts],
             LastComparison = LastComparison,
             RaceViewer = RaceViewer,
-            RaceProvider = [.. RaceProvider],
+            RaceProvider = [.. RaceProvider.Select(x => (RaceProviderSettings)x.Clone())],
             AgreedToSRLRules = AgreedToSRLRules,
             SimpleSumOfBest = SimpleSumOfBest,
             RefreshRate = RefreshRate,
