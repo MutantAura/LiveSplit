@@ -2,6 +2,7 @@ using LiveSplit.Model;
 using LiveSplit.Options;
 using LiveSplit.UI;
 using LiveSplit.UI.Components;
+using LiveSplit.Web;
 using System;
 using System.Collections.Generic;
 using System.Linq;

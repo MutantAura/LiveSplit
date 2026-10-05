@@ -1,5 +1,6 @@
 using LiveSplit.Options;
 using LiveSplit.View;
+using LiveSplit.Web;
 using System;
 using System.IO;
 using System.Text.Json;

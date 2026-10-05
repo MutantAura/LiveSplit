@@ -1,5 +1,5 @@
 using LiveSplit.Options;
-using LiveSplit.UI;
+using LiveSplit.Web;
 using System;
 using System.Collections.Generic;
 using System.IO;

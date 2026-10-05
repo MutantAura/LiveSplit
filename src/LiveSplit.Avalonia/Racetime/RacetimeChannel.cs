@@ -2,6 +2,7 @@ using LiveSplit.Model;
 using LiveSplit.Model.Comparisons;
 using LiveSplit.Options;
 using LiveSplit.TimeFormatters;
+using LiveSplit.Web;
 using System;
 using System.Collections.Generic;
 using System.IO;
