@@ -6,7 +6,9 @@ using Avalonia.Media;
 using LiveSplit.Model.Comparisons;
 using LiveSplit.Model.Input;
 using LiveSplit.Options;
+using LiveSplit.Racetime;
 using LiveSplit.Themes;
+using LiveSplit.UI;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -89,7 +91,8 @@ public sealed class SettingsWindow : Window
             {
                 new TabItem { Header = "Hotkeys", Content = new ScrollViewer { Content = hotkeysTab } },
                 new TabItem { Header = "General", Content = new ScrollViewer { Content = BuildGeneralPanel() } },
-                new TabItem { Header = "Comparisons", Content = new ScrollViewer { Content = BuildComparisonsPanel() } }
+                new TabItem { Header = "Comparisons", Content = new ScrollViewer { Content = BuildComparisonsPanel() } },
+                new TabItem { Header = "Racing", Content = new ScrollViewer { Content = BuildRacingPanel() } }
             }
         };
 
@@ -357,6 +360,45 @@ public sealed class SettingsWindow : Window
             Spacing = 8,
             Children = { new TextBlock { Text = "Best Runs", VerticalAlignment = VerticalAlignment.Center }, hcpBestRuns }
         });
+
+        return panel;
+    }
+
+    private Control BuildRacingPanel()
+    {
+        var panel = new StackPanel { Spacing = 6, Margin = new Thickness(8) };
+
+        foreach (RaceProviderSettings provider in settings.RaceProvider.Where(x => x is not UnloadedRaceProviderSettings))
+        {
+            panel.Children.Add(new TextBlock { Text = provider.DisplayName, FontWeight = FontWeight.Bold });
+
+            var enabled = new CheckBox { Content = $"Show {provider.DisplayName} races in the menu", IsChecked = provider.Enabled };
+            enabled.IsCheckedChanged += (s, e) => provider.Enabled = enabled.IsChecked == true;
+            panel.Children.Add(enabled);
+
+            if (provider is RacetimeSettings racetime)
+            {
+                var history = new CheckBox { Content = "Load chat history when joining a race", IsChecked = racetime.LoadChatHistory };
+                history.IsCheckedChanged += (s, e) => racetime.LoadChatHistory = history.IsChecked == true;
+                panel.Children.Add(history);
+
+                RacetimeAuthenticator authenticator = RacetimeAPI.Instance.Authenticator;
+                var signOut = new Button { Content = "Sign Out of racetime.gg", IsEnabled = authenticator.HasStoredLogin };
+                ToolTip.SetTip(signOut, "Forget the racetime.gg login stored on this computer. You will be asked to sign in again when joining a race.");
+                signOut.Click += (s, e) =>
+                {
+                    authenticator.SignOut();
+                    signOut.IsEnabled = false;
+                };
+                panel.Children.Add(signOut);
+            }
+
+            var website = new Button { Content = "Website" };
+            website.Click += (s, e) => UrlLauncher.Open(provider.WebsiteLink);
+            var rules = new Button { Content = "Rules" };
+            rules.Click += (s, e) => UrlLauncher.Open(provider.RulesLink);
+            panel.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { website, rules } });
+        }
 
         return panel;
     }

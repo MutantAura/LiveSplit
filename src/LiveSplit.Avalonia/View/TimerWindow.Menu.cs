@@ -149,6 +149,7 @@ public partial class TimerWindow
             new Separator(),
             Submenu("Control", BuildControlMenu()),
             Submenu("Compare Against", BuildComparisonsMenu()),
+            .. BuildRaceMenus(),
             new Separator(),
             Item("Edit Layout...", EditLayout),
             Submenu("Open Layout", BuildOpenLayoutMenu()),

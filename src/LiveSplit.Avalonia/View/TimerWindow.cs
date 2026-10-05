@@ -167,6 +167,8 @@ public partial class TimerWindow : UI.Portable.Form
         Hook = new CompositeHook(false);
         Hook.KeyOrButtonPressed += Hook_KeyOrButtonPressed;
         Settings.RegisterHotkeys(Hook, CurrentState.CurrentHotkeyProfile);
+
+        InitRaceProviders();
     }
 
     #region Layouts
@@ -1247,7 +1249,7 @@ public partial class TimerWindow : UI.Portable.Form
 
         e.Cancel = true;
 
-        if (!await WarnUserAboutSplitsSave() || !await WarnUserAboutLayoutSave(true))
+        if (!await CloseRaceRoom() || !await WarnUserAboutSplitsSave() || !await WarnUserAboutLayoutSave(true))
         {
             return;
         }

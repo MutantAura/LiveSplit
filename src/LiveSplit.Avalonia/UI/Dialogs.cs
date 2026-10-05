@@ -113,6 +113,52 @@ public static class MessageBox
 }
 
 /// <summary>
+/// Asks for a line of text. Returns null if cancelled.
+/// </summary>
+public static class InputBox
+{
+    public static Task<string> Show(Window owner, string prompt, string title, string initial = "", int maxLength = 0)
+    {
+        var window = new Window
+        {
+            Title = title,
+            SizeToContent = SizeToContent.Height,
+            Width = 420,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            ShowInTaskbar = false
+        };
+
+        var input = new TextBox { Text = initial ?? "", MaxLength = maxLength };
+        var ok = new Button { Content = "OK", IsDefault = true, MinWidth = 80, HorizontalContentAlignment = HorizontalAlignment.Center };
+        var cancel = new Button { Content = "Cancel", IsCancel = true, MinWidth = 80, HorizontalContentAlignment = HorizontalAlignment.Center };
+        ok.Click += (s, e) => window.Close(input.Text);
+        cancel.Click += (s, e) => window.Close(null);
+
+        window.Content = new StackPanel
+        {
+            Margin = new Thickness(16),
+            Spacing = 12,
+            Children =
+            {
+                new TextBlock { Text = prompt, TextWrapping = TextWrapping.Wrap },
+                input,
+                new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    Spacing = 8,
+                    Children = { ok, cancel }
+                }
+            }
+        };
+
+        window.Opened += (s, e) => input.Focus();
+        return window.ShowDialog<string>(owner);
+    }
+}
+
+/// <summary>
 /// A simple font picker: family, size, bold and italic.
 /// </summary>
 public static class FontDialog
