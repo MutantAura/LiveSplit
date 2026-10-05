@@ -34,7 +34,8 @@ public sealed record SrcVariable(
     string CategoryId,
     bool IsFullGame,
     bool IsSubcategory,
-    IReadOnlyDictionary<string, string> ValueIdsByLabel);
+    IReadOnlyDictionary<string, string> ValueIdsByLabel,
+    string DefaultValueLabel = null);
 
 /// <summary>
 /// A run at the top of a leaderboard. Times are null when the leaderboard doesn't track them.
@@ -106,15 +107,17 @@ public sealed class SpeedrunComApi(HttpClient http)
         {
             string scope = variable.Obj("scope").Str("type");
             JsonElement values = variable.Obj("values").Obj("values");
+            string defaultId = variable.Obj("values").Str("default");
+            string defaultLabel = null;
             var valueIds = new Dictionary<string, string>();
             if (values.ValueKind == JsonValueKind.Object)
             {
                 foreach (JsonProperty value in values.EnumerateObject())
                 {
                     string label = value.Value.Str("label");
-                    if (label != null)
+                    if (label != null && valueIds.TryAdd(label, value.Name) && value.Name == defaultId)
                     {
-                        valueIds.TryAdd(label, value.Name);
+                        defaultLabel = label;
                     }
                 }
             }
@@ -125,7 +128,8 @@ public sealed class SpeedrunComApi(HttpClient http)
                 variable.Str("category"),
                 scope is "global" or "full-game",
                 variable.Bool("is-subcategory"),
-                valueIds);
+                valueIds,
+                defaultLabel);
         })];
     }
 

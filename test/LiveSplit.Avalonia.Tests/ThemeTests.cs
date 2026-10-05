@@ -78,7 +78,7 @@ public class ThemeTests
             LiveSplitState state = CreateState();
 
             Capture(new SettingsWindow(new StandardSettingsFactory().Create(), "Default", null), "settings-" + suffix);
-            Capture(new SplitsEditorWindow(state, new TimerModel { CurrentState = state }), "splits-editor-" + suffix);
+            Capture(new SplitsEditorWindow(state, new TimerModel { CurrentState = state }, new FakeSpeedrunCom().Api), "splits-editor-" + suffix);
 
             var layoutEditor = new LayoutEditorWindow(state, () => { });
             Capture(layoutEditor, "layout-editor-" + suffix);

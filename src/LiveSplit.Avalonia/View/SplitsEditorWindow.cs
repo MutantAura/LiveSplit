@@ -4,9 +4,12 @@ using Avalonia.Controls.Templates;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using LiveSplit.Model;
+using LiveSplit.Options;
 using LiveSplit.TimeFormatters;
 using LiveSplit.UI;
+using LiveSplit.Web;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -30,13 +33,33 @@ public sealed class SplitsEditorWindow : Window
     private readonly StackPanel comparisonButtons;
     private TimingMethod method = TimingMethod.RealTime;
 
+    // The category suggestions when the game isn't known to speedrun.com, as in the Windows version.
+    private static readonly string[] DefaultCategories = ["Any%", "Low%", "100%"];
+
+    private readonly SpeedrunComApi api;
+    private readonly ComboBox categoryBox;
+    private readonly TextBlock subcategoryLabel;
+    private readonly WrapPanel subcategoryPanel;
+    private readonly TextBlock speedrunComStatus;
+    private readonly DispatcherTimer gameLookupTimer;
+    private SrcGame srcGame;
+    private IReadOnlyList<SrcCategory> srcCategories = [];
+    private IReadOnlyList<SrcVariable> srcVariables = [];
+    private int lookupVersion;
+    private bool updatingCategories;
+
+    /// <summary>
+    /// Completes when the current speedrun.com lookup of the game has finished. For tests.
+    /// </summary>
+    internal Task PendingLookup { get; private set; } = Task.CompletedTask;
+
     public static Task<bool> Show(Window owner, LiveSplitState state, ITimerModel model)
     {
         var window = new SplitsEditorWindow(state, model);
         return window.ShowDialog<bool>(owner);
     }
 
-    internal SplitsEditorWindow(LiveSplitState state, ITimerModel model)
+    internal SplitsEditorWindow(LiveSplitState state, ITimerModel model, SpeedrunComApi api = null)
     {
         this.state = state;
         this.model = model;
@@ -48,10 +71,50 @@ public sealed class SplitsEditorWindow : Window
 
         bool timerRunning = state.CurrentPhase != TimerPhase.NotRunning;
 
+        this.api = api ?? SpeedrunComApi.Shared;
+
         var gameName = new TextBox { Text = run.GameName, PlaceholderText = "Game Name" };
-        gameName.TextChanged += (s, e) => run.GameName = gameName.Text ?? "";
-        var categoryName = new TextBox { Text = run.CategoryName, PlaceholderText = "Category" };
-        categoryName.TextChanged += (s, e) => run.CategoryName = categoryName.Text ?? "";
+        gameName.TextChanged += (s, e) =>
+        {
+            run.GameName = gameName.Text ?? "";
+            gameLookupTimer.Stop();
+            gameLookupTimer.Start();
+        };
+
+        // Editable, so categories that aren't on speedrun.com can still be typed in.
+        categoryBox = new ComboBox
+        {
+            IsEditable = true,
+            ItemsSource = DefaultCategories,
+            Text = run.CategoryName,
+            PlaceholderText = "Category",
+            HorizontalAlignment = HorizontalAlignment.Stretch
+        };
+        categoryBox.PropertyChanged += (s, e) =>
+        {
+            if (e.Property == ComboBox.TextProperty && !updatingCategories)
+            {
+                run.CategoryName = categoryBox.Text ?? "";
+                UpdateSubcategories();
+            }
+        };
+
+        subcategoryLabel = new TextBlock { Text = "Subcategory", VerticalAlignment = VerticalAlignment.Center, IsVisible = false };
+        subcategoryPanel = new WrapPanel { ItemSpacing = 8, LineSpacing = 4, IsVisible = false };
+        speedrunComStatus = new TextBlock { Foreground = Brushes.Gray, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
+
+        gameLookupTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(600) };
+        gameLookupTimer.Tick += (s, e) =>
+        {
+            gameLookupTimer.Stop();
+            PendingLookup = LookUpGame();
+        };
+        Opened += (s, e) => PendingLookup = LookUpGame();
+        Closed += (s, e) =>
+        {
+            gameLookupTimer.Stop();
+            lookupVersion++;
+        };
 
         var offset = new TextBox { Text = new ShortTimeFormatter().Format(run.Offset), Width = 120 };
         offset.LostFocus += (s, e) =>
@@ -77,20 +140,23 @@ public sealed class SplitsEditorWindow : Window
         var header = new Grid
         {
             ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,*"),
-            RowDefinitions = new RowDefinitions("Auto,Auto,Auto"),
+            RowDefinitions = new RowDefinitions("Auto,Auto,Auto,Auto"),
             ColumnSpacing = 8,
             RowSpacing = 6
         };
         AddCell(header, new TextBlock { Text = "Game", VerticalAlignment = VerticalAlignment.Center }, 0, 0);
         AddCell(header, gameName, 0, 1);
         AddCell(header, new TextBlock { Text = "Category", VerticalAlignment = VerticalAlignment.Center }, 0, 2);
-        AddCell(header, categoryName, 0, 3);
-        AddCell(header, new TextBlock { Text = "Start Timer At", VerticalAlignment = VerticalAlignment.Center }, 1, 0);
-        AddCell(header, offset, 1, 1);
-        AddCell(header, new TextBlock { Text = "Attempts", VerticalAlignment = VerticalAlignment.Center }, 1, 2);
-        AddCell(header, attempts, 1, 3);
+        AddCell(header, categoryBox, 0, 3);
+        AddCell(header, speedrunComStatus, 1, 1);
+        AddCell(header, subcategoryLabel, 1, 2);
+        AddCell(header, subcategoryPanel, 1, 3);
+        AddCell(header, new TextBlock { Text = "Start Timer At", VerticalAlignment = VerticalAlignment.Center }, 2, 0);
+        AddCell(header, offset, 2, 1);
+        AddCell(header, new TextBlock { Text = "Attempts", VerticalAlignment = VerticalAlignment.Center }, 2, 2);
+        AddCell(header, attempts, 2, 3);
         var iconPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Children = { gameIcon, removeGameIcon } };
-        AddCell(header, iconPanel, 2, 1);
+        AddCell(header, iconPanel, 3, 1);
         Grid.SetColumnSpan(iconPanel, 3);
 
         var methodSelector = new ComboBox { ItemsSource = new[] { "Real Time", "Game Time" }, SelectedIndex = 0 };
@@ -195,6 +261,144 @@ public sealed class SplitsEditorWindow : Window
 
         Refresh();
     }
+
+    #region speedrun.com categories
+
+    /// <summary>
+    /// Looks the game up on speedrun.com and offers its full game categories and subcategories.
+    /// </summary>
+    private async Task LookUpGame()
+    {
+        int version = ++lookupVersion;
+        string gameName = run.GameName?.Trim();
+
+        SrcGame game = null;
+        IReadOnlyList<SrcCategory> categories = [];
+        IReadOnlyList<SrcVariable> variables = [];
+        string status = "";
+
+        if (!string.IsNullOrEmpty(gameName))
+        {
+            speedrunComStatus.Text = "Looking up the game on speedrun.com...";
+            try
+            {
+                game = await api.FindGameAsync(gameName);
+                if (game != null)
+                {
+                    categories = await api.GetCategoriesAsync(game.Id);
+                    variables = await api.GetVariablesAsync(game.Id);
+                }
+
+                status = game != null
+                    ? $"Categories from speedrun.com ({game.Name})"
+                    : "Not on speedrun.com; type the category name";
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"Could not look up the game on speedrun.com: {ex.Message}");
+                status = "Couldn't reach speedrun.com";
+            }
+        }
+
+        // The game was renamed again, or the window was closed, while waiting.
+        if (version != lookupVersion)
+        {
+            return;
+        }
+
+        srcGame = game;
+        srcCategories = categories;
+        srcVariables = variables;
+        speedrunComStatus.Text = status;
+        ToolTip.SetTip(speedrunComStatus, status);
+
+        string[] names = [.. categories.Where(x => x.IsPerGame).Select(x => x.Name)];
+        SetCategoryItems(names.Length > 0 ? names : DefaultCategories);
+        UpdateSubcategories();
+    }
+
+    private void SetCategoryItems(string[] names)
+    {
+        // Replacing the items can clear the text of an editable combo box; keep what was typed.
+        updatingCategories = true;
+        try
+        {
+            categoryBox.ItemsSource = names;
+            categoryBox.Text = run.CategoryName;
+        }
+        finally
+        {
+            updatingCategories = false;
+        }
+    }
+
+    private SrcCategory CurrentCategory()
+    {
+        string name = run.CategoryName?.Trim();
+        return srcCategories.FirstOrDefault(x => x.IsPerGame && x.Name == name)
+            ?? srcCategories.FirstOrDefault(x => x.IsPerGame && string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Shows a drop-down for each speedrun.com subcategory of the selected category. A subcategory
+    /// is always selected: the run's choice if it's valid, otherwise the leaderboard's default.
+    /// The choice is stored in the run's metadata by variable and value name, like the Windows
+    /// version does.
+    /// </summary>
+    private void UpdateSubcategories()
+    {
+        subcategoryPanel.Children.Clear();
+
+        SrcCategory category = CurrentCategory();
+        List<SrcVariable> subcategories = category == null
+            ? []
+            : [.. srcVariables.Where(x => x.IsFullGame && x.IsSubcategory && x.ValueIdsByLabel.Count > 0
+                && (x.CategoryId == null || x.CategoryId == category.Id))];
+
+        // Subcategories chosen for another of the game's categories no longer apply.
+        if (category != null)
+        {
+            foreach (SrcVariable other in srcVariables.Where(x => x.IsSubcategory && !subcategories.Contains(x)))
+            {
+                if (subcategories.All(x => x.Name != other.Name))
+                {
+                    run.Metadata.VariableValueNames.Remove(other.Name);
+                }
+            }
+        }
+
+        foreach (SrcVariable variable in subcategories)
+        {
+            List<string> options = [.. variable.ValueIdsByLabel.Keys];
+            if (!run.Metadata.VariableValueNames.TryGetValue(variable.Name, out string current) || !options.Contains(current))
+            {
+                current = variable.DefaultValueLabel ?? options[0];
+                run.Metadata.VariableValueNames[variable.Name] = current;
+            }
+
+            var box = new ComboBox { ItemsSource = options, SelectedItem = current, MinWidth = 140, Tag = variable.Name };
+            ToolTip.SetTip(box, variable.Name);
+            box.SelectionChanged += (s, e) =>
+            {
+                if (box.SelectedItem is string selected)
+                {
+                    run.Metadata.VariableValueNames[variable.Name] = selected;
+                }
+            };
+
+            if (subcategories.Count > 1)
+            {
+                subcategoryPanel.Children.Add(new TextBlock { Text = variable.Name, VerticalAlignment = VerticalAlignment.Center });
+            }
+
+            subcategoryPanel.Children.Add(box);
+        }
+
+        subcategoryLabel.Text = subcategories.Count > 1 ? "Subcategories" : "Subcategory";
+        subcategoryLabel.IsVisible = subcategoryPanel.IsVisible = subcategories.Count > 0;
+    }
+
+    #endregion
 
     private static void AddCell(Grid grid, Control control, int row, int column)
     {
