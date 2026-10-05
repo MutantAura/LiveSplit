@@ -24,8 +24,16 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             ParseArguments(desktop.Args ?? [], out string splitsPath, out string layoutPath);
-            desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
-            desktop.MainWindow = new TimerWindow(splitsPath, layoutPath);
+
+            // Exit explicitly once the timer window has closed. With OnMainWindowClose, Avalonia
+            // makes a single shutdown attempt when the main window closes and abandons it if any
+            // other window is still open at that moment, e.g. a save prompt that is still closing
+            // when the timer closes through its context menu. The process then keeps running with
+            // no windows.
+            desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            var timer = new TimerWindow(splitsPath, layoutPath);
+            timer.Closed += (s, e) => desktop.Shutdown();
+            desktop.MainWindow = timer;
         }
 
         base.OnFrameworkInitializationCompleted();
