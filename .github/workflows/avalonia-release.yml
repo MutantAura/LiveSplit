@@ -1,0 +1,143 @@
+name: Avalonia Latest Release
+
+# Publishes the cross-platform (Avalonia) front end with Native AOT for Windows, Linux and
+# macOS on every push to avalonia-port and replaces the files of the "latest" pre-release.
+
+on:
+  push:
+    branches:
+      - avalonia-port
+  workflow_dispatch:
+
+# Only one run may update the release at a time; a newer push supersedes an older run.
+concurrency:
+  group: avalonia-latest-release
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build (${{ matrix.rid }})
+    runs-on: ${{ matrix.os }}
+
+    # Native AOT compiles with the platform's own toolchain, so each target is built on its OS.
+    # macOS can build both architectures; Intel is cross-compiled on the Apple Silicon runner.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: macos-latest
+            rid: osx-arm64
+          - os: macos-latest
+            rid: osx-x64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.x'
+
+      - name: Install Native AOT prerequisites (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang zlib1g-dev
+
+      # The AOT compiler locates the MSVC linker with vswhere, which the Visual Studio installer
+      # does not put on PATH.
+      - name: Add vswhere to PATH (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Add-Content $env:GITHUB_PATH "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer"
+
+      - name: Publish
+        shell: bash
+        run: >
+          dotnet publish src/LiveSplit.Avalonia/LiveSplit.Avalonia.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained true
+          -o publish/${{ matrix.rid }}
+          -p:PublishAot=true
+          -p:StripSymbols=true
+
+      # The native libraries next to the executable (Skia, HarfBuzz, the hotkey hook) are needed
+      # at runtime; debug symbols are not.
+      - name: Remove debug symbols
+        shell: bash
+        run: |
+          cd publish/${{ matrix.rid }}
+          rm -rf -- *.pdb *.dbg *.dSYM
+          ls -la
+
+      # Zip on Windows; tar elsewhere so that the executable keeps its permissions.
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path publish/${{ matrix.rid }}/* -DestinationPath LiveSplit.Avalonia-${{ matrix.rid }}.zip
+
+      - name: Package (Linux, macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: tar -czf LiveSplit.Avalonia-${{ matrix.rid }}.tar.gz -C publish/${{ matrix.rid }} .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: LiveSplit.Avalonia-${{ matrix.rid }}
+          path: LiveSplit.Avalonia-${{ matrix.rid }}.*
+          if-no-files-found: error
+
+  release:
+    name: Update latest release
+    needs: build
+    runs-on: ubuntu-latest
+    # Only avalonia-port publishes releases (a manual run from another branch just builds), and
+    # never in the upstream repository, which publishes its own development builds.
+    if: github.ref == 'refs/heads/avalonia-port' && github.repository != 'LiveSplit/LiveSplit'
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: release
+          merge-multiple: true
+
+      - name: Publish release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notes="Automated Native AOT build of the cross-platform LiveSplit from ${GITHUB_REF_NAME} at ${GITHUB_SHA::7}.
+
+          - Windows: LiveSplit.Avalonia-win-x64.zip
+          - Linux: LiveSplit.Avalonia-linux-x64.tar.gz
+          - macOS (Apple Silicon): LiveSplit.Avalonia-osx-arm64.tar.gz
+          - macOS (Intel): LiveSplit.Avalonia-osx-x64.tar.gz
+
+          Extract the whole archive and run LiveSplit.Avalonia; the libraries next to it are required.
+          The macOS builds are not notarized; if macOS refuses to open LiveSplit, right-click it and choose Open, or run \`xattr -dr com.apple.quarantine\` on the extracted folder."
+
+          # Point the "latest" tag at this commit.
+          git tag -f latest "$GITHUB_SHA"
+          git push -f origin refs/tags/latest
+
+          if gh release view latest > /dev/null 2>&1; then
+            gh release edit latest --title "Latest build" --notes "$notes" --prerelease
+          else
+            gh release create latest --title "Latest build" --notes "$notes" --prerelease --verify-tag
+          fi
+
+          gh release upload latest release/* --clobber
