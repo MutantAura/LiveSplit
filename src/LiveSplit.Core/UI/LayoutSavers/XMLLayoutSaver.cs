@@ -113,11 +113,19 @@ public class XMLLayoutSaver : ILayoutSaver
                 }
                 else
                 {
+#if LIVESPLIT_PORTABLE
+                    // Native AOT friendly: no reflection or `dynamic`.
+                    if (component.Component is ISettingsHashCodeProvider provider)
+                    {
+                        hashCode ^= provider.GetSettingsHashCode() ^ (component.GetHashCode() * count);
+                    }
+#else
                     Type type = component.Component.GetType();
                     if (type.GetMethod("GetSettingsHashCode") != null)
                     {
                         hashCode ^= ((dynamic)component.Component).GetSettingsHashCode() ^ (component.GetHashCode() * count);
                     }
+#endif
                     else
                     {
                         hashCode ^= component.Component.GetSettings(new XmlDocument()).InnerXml.GetHashCode() ^ (component.GetHashCode() * count);

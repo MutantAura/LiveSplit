@@ -1,5 +1,7 @@
 ﻿using LiveSplit.UI;
+#if !LIVESPLIT_PORTABLE
 using LiveSplit.Web;
+#endif
 using System;
 using System.Globalization;
 using System.Xml;
@@ -126,6 +128,7 @@ public struct Attempt
         return new Attempt(index, newTime, started, ended, pauseTime);
     }
 
+#if !LIVESPLIT_PORTABLE
     public readonly DynamicJsonObject ToJson()
     {
         dynamic json = new DynamicJsonObject();
@@ -137,4 +140,5 @@ public struct Attempt
         json.pauseTime = PauseTime;
         return json;
     }
+#endif
 }

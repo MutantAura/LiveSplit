@@ -1,4 +1,6 @@
-﻿using LiveSplit.Web;
+﻿#if !LIVESPLIT_PORTABLE
+using LiveSplit.Web;
+#endif
 using System;
 using System.Xml;
 
@@ -90,6 +92,7 @@ public struct Time
         return parent;
     }
 
+#if !LIVESPLIT_PORTABLE
     public readonly DynamicJsonObject ToJson()
     {
         dynamic json = new DynamicJsonObject();
@@ -97,6 +100,7 @@ public struct Time
         json.gameTime = GameTime.ToString();
         return json;
     }
+#endif
 
     public static Time ParseText(string text)
     {

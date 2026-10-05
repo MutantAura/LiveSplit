@@ -2,7 +2,11 @@
 using LiveSplit.Options;
 using LiveSplit.UI;
 using System;
+#if LIVESPLIT_PORTABLE
+using Forms = LiveSplit.UI.Portable;
+#else
 using Forms = System.Windows.Forms;
+#endif
 
 namespace LiveSplit.Model;
 

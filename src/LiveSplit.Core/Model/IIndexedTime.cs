@@ -1,4 +1,6 @@
-﻿using LiveSplit.Web;
+﻿#if !LIVESPLIT_PORTABLE
+using LiveSplit.Web;
+#endif
 using System.Xml;
 
 namespace LiveSplit.Model;
@@ -33,6 +35,7 @@ public static class IndexedTimeHelper
         return new IndexedTime(newTime, index);
     }
 
+#if !LIVESPLIT_PORTABLE
     public static DynamicJsonObject ToJson(this IIndexedTime indexedTime)
     {
         dynamic coolObject = new DynamicJsonObject();
@@ -41,4 +44,5 @@ public static class IndexedTimeHelper
         coolObject.gameTime = indexedTime.Time.GameTime;
         return coolObject;
     }
+#endif
 }

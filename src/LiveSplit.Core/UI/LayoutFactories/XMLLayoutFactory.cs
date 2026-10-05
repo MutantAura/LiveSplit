@@ -147,9 +147,14 @@ public class XMLLayoutFactory : ILayoutFactory
                         // Components that had their own font override settings can provide
                         // a MigrateFontOverrides(FontOverrides) method to populate the new
                         // unified FontOverrides on the LayoutComponent wrapper.
+#if LIVESPLIT_PORTABLE
+                        // Native AOT friendly: no reflection lookups.
+                        (layoutComponent.Component as IFontOverridesMigration)?.MigrateFontOverrides(lcLegacy.FontOverrides);
+#else
                         layoutComponent.Component.GetType()
                             .GetMethod("MigrateFontOverrides", [typeof(FontOverrides)])
                             ?.Invoke(layoutComponent.Component, [lcLegacy.FontOverrides]);
+#endif
                     }
                 }
                 catch (Exception e)

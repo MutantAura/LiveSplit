@@ -1,0 +1,81 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Cross-platform core used by the Avalonia front end.
+
+    The platform-neutral parts of LiveSplit.Core (model, timer, comparisons,
+    time formatters, settings and layout serialization) are compiled directly
+    from their original source files so that both front ends share a single
+    implementation. Files that depend on WinForms, GDI+ or Win32 are excluded
+    and replaced by portable implementations under Portable/ that keep the same
+    type names and public surface wherever possible.
+  -->
+
+  <PropertyGroup>
+    <RootNamespace>LiveSplit</RootNamespace>
+    <TargetFramework>net10.0</TargetFramework>
+    <DefineConstants>$(DefineConstants);LIVESPLIT_PORTABLE</DefineConstants>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <NoWarn>$(NoWarn);CA1416;SYSLIB0011;CS0618</NoWarn>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <SharedCorePath>$(SrcPath)/LiveSplit.Core</SharedCorePath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(SharedCorePath)/Model/**/*.cs" LinkBase="Shared/Model" />
+    <Compile Include="$(SharedCorePath)/Options/**/*.cs" LinkBase="Shared/Options" />
+    <Compile Include="$(SharedCorePath)/TimeFormatters/**/*.cs" LinkBase="Shared/TimeFormatters" />
+    <Compile Include="$(SharedCorePath)/Web/SRL/RaceViewers/*.cs" LinkBase="Shared/Web/SRL/RaceViewers" />
+    <Compile Include="$(SharedCorePath)/UI/ColorExtensions.cs;
+                      $(SharedCorePath)/UI/GradientType.cs;
+                      $(SharedCorePath)/UI/GraphicsCache.cs;
+                      $(SharedCorePath)/UI/ILayout.cs;
+                      $(SharedCorePath)/UI/Layout.cs;
+                      $(SharedCorePath)/UI/LayoutMode.cs;
+                      $(SharedCorePath)/UI/RenameEventArgs.cs;
+                      $(SharedCorePath)/UI/LayoutFactories/*.cs;
+                      $(SharedCorePath)/UI/LayoutSavers/*.cs;
+                      $(SharedCorePath)/UI/Components/ComponentCategory.cs;
+                      $(SharedCorePath)/UI/Components/GlobalFont.cs;
+                      $(SharedCorePath)/UI/Components/GlobalFontConsumerAttribute.cs;
+                      $(SharedCorePath)/UI/Components/IDeactivatableComponent.cs;
+                      $(SharedCorePath)/UI/Components/ILayoutComponent.cs;
+                      $(SharedCorePath)/UI/Components/LayoutComponent.cs"
+             LinkBase="Shared/UI" />
+
+    <!-- Windows-only input hooks (Win32 keyboard hooks, DirectInput). Replaced by Portable/Input. -->
+    <Compile Remove="$(SharedCorePath)/Model/Input/**" />
+    <!-- Downloads and hosts WinForms auto splitter components. Replaced by a stub. -->
+    <Compile Remove="$(SharedCorePath)/Model/AutoSplitter.cs" />
+    <Compile Remove="$(SharedCorePath)/Model/AutoSplitterFactory.cs" />
+    <!-- Resolves metadata through SpeedrunComSharp (System.Web). Replaced by Portable/Model/RunMetadata. -->
+    <Compile Remove="$(SharedCorePath)/Model/RunMetadata.cs" />
+    <!-- Parses through the native livesplit-core library. Replaced by Portable/Model/XMLRunFactory. -->
+    <Compile Remove="$(SharedCorePath)/Model/RunFactories/StandardFormatsRunFactory.cs" />
+    <Compile Remove="$(SharedCorePath)/Model/RunSavers/ExcelRunSaver.cs" />
+    <!-- Windows registry, WinForms controls and Win32 hotkeys. -->
+    <Compile Remove="$(SharedCorePath)/Options/FiletypeRegistryHelper.cs" />
+    <Compile Remove="$(SharedCorePath)/Options/Log.cs" />
+    <Compile Remove="$(SharedCorePath)/Options/RaceProviderSettings.cs" />
+    <Compile Remove="$(SharedCorePath)/Options/Settings.cs" />
+    <Compile Remove="$(SharedCorePath)/Options/SettingsFactories/StandardSettingsFactory.cs" />
+  </ItemGroup>
+
+  <!-- GDI+ types used by the shared sources resolve to the portable implementations. -->
+  <ItemGroup>
+    <Using Include="LiveSplit.Drawing.Font" Alias="Font" />
+    <Using Include="LiveSplit.Drawing.FontStyle" Alias="FontStyle" />
+    <Using Include="LiveSplit.Drawing.GraphicsUnit" Alias="GraphicsUnit" />
+    <Using Include="LiveSplit.Drawing.Image" Alias="Image" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.3" />
+    <PackageReference Include="SharpHook" Version="8.0.0" />
+    <PackageReference Include="System.Formats.Nrbf" Version="10.0.12" />
+  </ItemGroup>
+
+</Project>
