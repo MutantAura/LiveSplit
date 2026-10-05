@@ -15,6 +15,10 @@ publish/
 # User-specific files
 *.user
 
+# Local build scripts (CI publishes the Avalonia front end itself)
+/build.bat
+/build.sh
+
 # MSBuild
 *.binlog
 
