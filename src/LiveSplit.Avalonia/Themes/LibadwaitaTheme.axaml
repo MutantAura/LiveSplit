@@ -1,0 +1,240 @@
+<!--
+  Recreation of GNOME's libadwaita (1.6) look, layered on top of Avalonia's Fluent theme.
+  Colors follow libadwaita's named colors (window_bg, view_bg, popover_bg, accent_bg, ...).
+  Buttons and entries are borderless with translucent "currentColor" fills (10% / 15% / 30%
+  for normal / hover / pressed), controls are rounded by 6px and popovers by 12px, the
+  suggested (default) button is filled with the accent, and tabs look like a view switcher.
+  The font is Adwaita Sans (GNOME 48+), falling back to Cantarell and then the bundled Inter,
+  which Adwaita Sans is derived from.
+-->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="LiveSplit.Themes.LibadwaitaTheme">
+
+  <Styles.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+
+        <ResourceDictionary x:Key="Light">
+          <Color x:Key="SystemAccentColor">#3584E4</Color>
+          <Color x:Key="SystemAccentColorDark1">#1C71D8</Color>
+          <Color x:Key="SystemAccentColorDark2">#1A5FB4</Color>
+          <Color x:Key="SystemAccentColorDark3">#0461BE</Color>
+          <Color x:Key="SystemAccentColorLight1">#62A0EA</Color>
+          <Color x:Key="SystemAccentColorLight2">#99C1F1</Color>
+          <Color x:Key="SystemAccentColorLight3">#C2D9F7</Color>
+
+          <!-- window_bg / window_fg -->
+          <!-- window_bg. Fluent paints windows with SystemRegionBrush. -->
+          <Color x:Key="SystemRegionColor">#FAFAFB</Color>
+          <SolidColorBrush x:Key="SystemRegionBrush" Color="#FAFAFB" />
+          <SolidColorBrush x:Key="SystemControlBackgroundAltHighBrush" Color="#FAFAFB" />
+          <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrush" Color="#333338" />
+          <SolidColorBrush x:Key="SystemControlForegroundBaseMediumBrush" Color="#77777B" />
+
+          <!-- button: alpha(currentColor, .1 / .15 / .3), no border -->
+          <SolidColorBrush x:Key="ButtonBackground" Color="#E1E1E3" />
+          <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#D5D5D7" />
+          <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#AFAFB2" />
+          <SolidColorBrush x:Key="ButtonBackgroundDisabled" Color="#EDEDEE" />
+          <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
+          <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Transparent" />
+          <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Transparent" />
+          <SolidColorBrush x:Key="ButtonBorderBrushDisabled" Color="Transparent" />
+          <SolidColorBrush x:Key="ButtonForeground" Color="#333338" />
+          <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#333338" />
+          <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#333338" />
+
+          <!-- .suggested-action -->
+          <SolidColorBrush x:Key="AccentButtonBackground" Color="#3584E4" />
+          <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="#4990E7" />
+          <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="#2A6AB6" />
+          <SolidColorBrush x:Key="AccentButtonBorderBrush" Color="Transparent" />
+          <SolidColorBrush x:Key="AccentButtonBorderBrushPointerOver" Color="Transparent" />
+          <SolidColorBrush x:Key="AccentButtonBorderBrushPressed" Color="Transparent" />
+          <SolidColorBrush x:Key="AccentButtonForeground" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="#FFFFFF" />
+
+          <!-- entry: alpha(currentColor, .1), focus ring alpha(accent, .5) -->
+          <SolidColorBrush x:Key="TextControlBackground" Color="#E1E1E3" />
+          <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#DADADC" />
+          <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#E1E1E3" />
+          <SolidColorBrush x:Key="TextControlBorderBrush" Color="Transparent" />
+          <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="Transparent" />
+          <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#803584E4" />
+          <SolidColorBrush x:Key="TextControlForeground" Color="#333338" />
+          <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#333338" />
+
+          <SolidColorBrush x:Key="ComboBoxBackground" Color="#E1E1E3" />
+          <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#D5D5D7" />
+          <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#AFAFB2" />
+          <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="Transparent" />
+          <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="Transparent" />
+          <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="Transparent" />
+          <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#DEDEE0" />
+
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="#3584E4" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="#4990E7" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" Color="#2A6AB6" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="#C4C4C6" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" Color="#AFAFB2" />
+          <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundChecked" Color="#FFFFFF" />
+
+          <!-- popover_bg, menu rows alpha(currentColor, .07) -->
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#DEDEE0" />
+          <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#EDEDEE" />
+          <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#E1E1E3" />
+
+          <SolidColorBrush x:Key="SystemControlHighlightListLowBrush" Color="#EDEDEE" />
+          <SolidColorBrush x:Key="SystemControlHighlightListAccentLowBrush" Color="#333584E4" />
+          <SolidColorBrush x:Key="SystemControlHighlightListAccentMediumBrush" Color="#403584E4" />
+          <SolidColorBrush x:Key="SystemControlHighlightListAccentHighBrush" Color="#4D3584E4" />
+
+          <SolidColorBrush x:Key="TabItemHeaderBackgroundUnselectedPointerOver" Color="#EDEDEE" />
+          <SolidColorBrush x:Key="TabItemHeaderBackgroundSelected" Color="#E1E1E3" />
+          <SolidColorBrush x:Key="TabItemHeaderBackgroundSelectedPointerOver" Color="#D5D5D7" />
+          <SolidColorBrush x:Key="TabItemHeaderForegroundUnselected" Color="#333338" />
+          <SolidColorBrush x:Key="TabItemHeaderForegroundUnselectedPointerOver" Color="#333338" />
+          <SolidColorBrush x:Key="TabItemHeaderForegroundSelected" Color="#333338" />
+          <SolidColorBrush x:Key="TabItemHeaderForegroundSelectedPointerOver" Color="#333338" />
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Dark">
+          <Color x:Key="SystemAccentColor">#3584E4</Color>
+          <Color x:Key="SystemAccentColorDark1">#1C71D8</Color>
+          <Color x:Key="SystemAccentColorDark2">#1A5FB4</Color>
+          <Color x:Key="SystemAccentColorDark3">#0461BE</Color>
+          <Color x:Key="SystemAccentColorLight1">#62A0EA</Color>
+          <Color x:Key="SystemAccentColorLight2">#78AEED</Color>
+          <Color x:Key="SystemAccentColorLight3">#99C1F1</Color>
+
+          <!-- window_bg. Fluent paints windows with SystemRegionBrush. -->
+          <Color x:Key="SystemRegionColor">#222226</Color>
+          <SolidColorBrush x:Key="SystemRegionBrush" Color="#222226" />
+          <SolidColorBrush x:Key="SystemControlBackgroundAltHighBrush" Color="#222226" />
+          <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrush" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="SystemControlForegroundBaseMediumBrush" Color="#A9A9AC" />
+
+          <SolidColorBrush x:Key="ButtonBackground" Color="#38383C" />
+          <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#434347" />
+          <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#646468" />
+          <SolidColorBrush x:Key="ButtonBackgroundDisabled" Color="#2D2D31" />
+          <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
+          <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Transparent" />
+          <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Transparent" />
+          <SolidColorBrush x:Key="ButtonBorderBrushDisabled" Color="Transparent" />
+          <SolidColorBrush x:Key="ButtonForeground" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#FFFFFF" />
+
+          <SolidColorBrush x:Key="AccentButtonBackground" Color="#3584E4" />
+          <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="#4990E7" />
+          <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="#2A6AB6" />
+          <SolidColorBrush x:Key="AccentButtonBorderBrush" Color="Transparent" />
+          <SolidColorBrush x:Key="AccentButtonBorderBrushPointerOver" Color="Transparent" />
+          <SolidColorBrush x:Key="AccentButtonBorderBrushPressed" Color="Transparent" />
+          <SolidColorBrush x:Key="AccentButtonForeground" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="#FFFFFF" />
+
+          <SolidColorBrush x:Key="TextControlBackground" Color="#38383C" />
+          <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#3D3D41" />
+          <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#38383C" />
+          <SolidColorBrush x:Key="TextControlBorderBrush" Color="Transparent" />
+          <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="Transparent" />
+          <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#803584E4" />
+          <SolidColorBrush x:Key="TextControlForeground" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#FFFFFF" />
+
+          <SolidColorBrush x:Key="ComboBoxBackground" Color="#38383C" />
+          <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#434347" />
+          <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#646468" />
+          <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="Transparent" />
+          <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="Transparent" />
+          <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="Transparent" />
+          <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#36363A" />
+          <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#46464A" />
+
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="#3584E4" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="#4990E7" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" Color="#2A6AB6" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="#55555A" />
+          <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" Color="#6A6A6F" />
+          <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundChecked" Color="#FFFFFF" />
+
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#36363A" />
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#46464A" />
+          <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#404044" />
+          <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#4A4A4E" />
+
+          <SolidColorBrush x:Key="SystemControlHighlightListLowBrush" Color="#2C2C30" />
+          <SolidColorBrush x:Key="SystemControlHighlightListAccentLowBrush" Color="#403584E4" />
+          <SolidColorBrush x:Key="SystemControlHighlightListAccentMediumBrush" Color="#4D3584E4" />
+          <SolidColorBrush x:Key="SystemControlHighlightListAccentHighBrush" Color="#5A3584E4" />
+
+          <SolidColorBrush x:Key="TabItemHeaderBackgroundUnselectedPointerOver" Color="#2E2E32" />
+          <SolidColorBrush x:Key="TabItemHeaderBackgroundSelected" Color="#38383C" />
+          <SolidColorBrush x:Key="TabItemHeaderBackgroundSelectedPointerOver" Color="#434347" />
+          <SolidColorBrush x:Key="TabItemHeaderForegroundUnselected" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="TabItemHeaderForegroundUnselectedPointerOver" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="TabItemHeaderForegroundSelected" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="TabItemHeaderForegroundSelectedPointerOver" Color="#FFFFFF" />
+        </ResourceDictionary>
+
+      </ResourceDictionary.ThemeDictionaries>
+
+      <CornerRadius x:Key="ControlCornerRadius">6</CornerRadius>
+      <CornerRadius x:Key="OverlayCornerRadius">12</CornerRadius>
+      <FontFamily x:Key="ContentControlThemeFontFamily">Adwaita Sans, Cantarell, fonts:Inter#Inter</FontFamily>
+      <x:Double x:Key="TabItemHeaderFontSize">14</x:Double>
+      <Thickness x:Key="MenuFlyoutPresenterThemePadding">6</Thickness>
+    </ResourceDictionary>
+  </Styles.Resources>
+
+  <Style Selector="Window">
+    <Setter Property="FontFamily" Value="{DynamicResource ContentControlThemeFontFamily}" />
+  </Style>
+
+  <!-- Buttons: borderless, medium-weight labels, suggested action (default button) in bold. -->
+  <Style Selector="Button, ToggleButton, RepeatButton, ComboBox">
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="10,5" />
+    <Setter Property="MinHeight" Value="34" />
+  </Style>
+  <Style Selector="Button">
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <!-- Entries: no border until focused, then a 2px accent focus ring. -->
+  <Style Selector="TextBox, AutoCompleteBox">
+    <Setter Property="BorderThickness" Value="2" />
+    <Setter Property="MinHeight" Value="34" />
+  </Style>
+
+  <!-- Menus: rounded rows inset from the popover edge. -->
+  <Style Selector="MenuItem">
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Margin" Value="0,1" />
+  </Style>
+
+  <!-- Tabs as an AdwViewSwitcher: pill-shaped, no underline indicator. -->
+  <Style Selector="TabItem">
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="MinHeight" Value="34" />
+    <Setter Property="Padding" Value="14,0" />
+    <Setter Property="Margin" Value="0,0,6,6" />
+    <Setter Property="CornerRadius" Value="6" />
+  </Style>
+  <Style Selector="TabItem /template/ Border#PART_SelectedPipe">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+
+  <Style Selector="CheckBox">
+    <Setter Property="CornerRadius" Value="6" />
+  </Style>
+
+</Styles>

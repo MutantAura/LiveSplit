@@ -6,6 +6,7 @@ using Avalonia.Media;
 using LiveSplit.Model.Comparisons;
 using LiveSplit.Model.Input;
 using LiveSplit.Options;
+using LiveSplit.Themes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,6 +35,22 @@ public sealed class SettingsWindow : Window
     internal SettingsWindow(ISettings settings, string currentProfile, CompositeHook hook)
     {
         this.settings = settings;
+
+        // Theme changes preview immediately; restore the previous theme unless OK is pressed.
+        AppTheme originalTheme = ThemeManager.Theme;
+        ThemeMode originalMode = ThemeManager.Mode;
+        bool accepted = false;
+        Closed += (s, e) =>
+        {
+            if (accepted)
+            {
+                ThemeManager.Save();
+            }
+            else if (ThemeManager.Theme != originalTheme || ThemeManager.Mode != originalMode)
+            {
+                ThemeManager.Apply(originalTheme, originalMode);
+            }
+        };
 
         Title = "Settings";
         Width = 560;
@@ -79,7 +96,11 @@ public sealed class SettingsWindow : Window
 
         var ok = new Button { Content = "OK", IsDefault = true, MinWidth = 80 };
         var cancel = new Button { Content = "Cancel", IsCancel = true, MinWidth = 80 };
-        ok.Click += (s, e) => Close(SelectedProfile ?? settings.HotkeyProfiles.Keys.First());
+        ok.Click += (s, e) =>
+        {
+            accepted = true;
+            Close(SelectedProfile ?? settings.HotkeyProfiles.Keys.First());
+        };
         cancel.Click += (s, e) => Close(null);
 
         var footer = new StackPanel
@@ -235,12 +256,53 @@ public sealed class SettingsWindow : Window
         var refreshRate = new NumericUpDown { Value = settings.RefreshRate, Minimum = 20, Maximum = 300, FormatString = "0", Width = 140 };
         refreshRate.ValueChanged += (s, e) => settings.RefreshRate = (int)(refreshRate.Value ?? 40);
 
+        AppTheme[] themes = Enum.GetValues<AppTheme>();
+        var theme = new ComboBox
+        {
+            ItemsSource = themes.Select(ThemeManager.DisplayName).ToList(),
+            SelectedIndex = Array.IndexOf(themes, ThemeManager.Theme),
+            MinWidth = 180
+        };
+
+        ThemeMode[] modes = Enum.GetValues<ThemeMode>();
+        var mode = new ComboBox
+        {
+            ItemsSource = modes.Select(ThemeManager.DisplayName).ToList(),
+            SelectedIndex = Array.IndexOf(modes, ThemeManager.Mode),
+            MinWidth = 180
+        };
+
+        void ApplyTheme()
+        {
+            if (theme.SelectedIndex >= 0 && mode.SelectedIndex >= 0)
+            {
+                ThemeManager.Apply(themes[theme.SelectedIndex], modes[mode.SelectedIndex]);
+            }
+        }
+
+        theme.SelectionChanged += (s, e) => ApplyTheme();
+        mode.SelectionChanged += (s, e) => ApplyTheme();
+
+        var appearance = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("Auto,Auto"),
+            RowDefinitions = new RowDefinitions("Auto,Auto"),
+            ColumnSpacing = 12,
+            RowSpacing = 6,
+            Margin = new Thickness(0, 0, 0, 12)
+        };
+        AddToGrid(appearance, new TextBlock { Text = "Theme", VerticalAlignment = VerticalAlignment.Center }, 0, 0);
+        AddToGrid(appearance, theme, 1, 0);
+        AddToGrid(appearance, new TextBlock { Text = "Appearance", VerticalAlignment = VerticalAlignment.Center }, 0, 1);
+        AddToGrid(appearance, mode, 1, 1);
+
         return new StackPanel
         {
             Spacing = 8,
             Margin = new Thickness(8),
             Children =
             {
+                appearance,
                 warnOnReset,
                 simpleSumOfBest,
                 new StackPanel

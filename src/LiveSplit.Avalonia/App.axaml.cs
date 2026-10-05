@@ -19,6 +19,7 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         BuiltInComponents.Register();
+        Themes.ThemeManager.Initialize();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
