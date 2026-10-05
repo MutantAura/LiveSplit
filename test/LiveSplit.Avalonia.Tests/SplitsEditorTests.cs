@@ -1,7 +1,12 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
 using Avalonia.LogicalTree;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using LiveSplit.Model;
 using LiveSplit.Model.Comparisons;
 using LiveSplit.Options.SettingsFactories;
@@ -119,6 +124,75 @@ public class SplitsEditorTests
         // The subcategory of another category is removed; other variables are left alone.
         Assert.False(run.Metadata.VariableValueNames.ContainsKey("Other Category"));
         Assert.Equal("1.4", run.Metadata.VariableValueNames["Version"]);
+        window.Close();
+    }
+
+    /// <summary>
+    /// Regression test: in a short window, the segment and comparison buttons used to overflow
+    /// and draw over the OK and Cancel buttons.
+    /// </summary>
+    [AvaloniaFact]
+    public void OkAndCancelStayVisibleInAShortWindow()
+    {
+        IRun run = new Run(new StandardComparisonGeneratorsFactory()) { GameName = "Celeste", CategoryName = "Any%" };
+        for (int i = 0; i < 20; i++)
+        {
+            run.AddSegment($"Segment {i + 1}");
+        }
+
+        for (int i = 0; i < 6; i++)
+        {
+            run.CustomComparisons.Add($"Comparison {i + 1}");
+        }
+
+        var state = new LiveSplitState(run, null, null, null, new StandardSettingsFactory().Create());
+        var window = new SplitsEditorWindow(state, new TimerModel { CurrentState = state }, new FakeSpeedrunCom().Api)
+        {
+            Height = 300
+        };
+        window.Show();
+        Wait(() => window.PendingLookup.IsCompleted);
+        for (int i = 0; i < 4; i++)
+        {
+            Dispatcher.UIThread.RunJobs();
+            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+        }
+
+        Rect Bounds(Visual control)
+        {
+            Point topLeft = control.TranslatePoint(default, window)!.Value;
+            return new Rect(topLeft, control.Bounds.Size);
+        }
+
+        List<Button> buttons = [.. window.GetLogicalDescendants().OfType<Button>().Distinct()];
+        Button okButton = buttons.Single(x => x.Content as string == "OK");
+        Button cancelButton = buttons.Single(x => x.Content as string == "Cancel");
+        Rect ok = Bounds(okButton);
+        Rect cancel = Bounds(cancelButton);
+        Assert.True(ok.Bottom <= window.Bounds.Height && cancel.Bottom <= window.Bounds.Height);
+
+        // Nothing is drawn on top of OK and Cancel: clicking them reaches them.
+        foreach ((Button button, Rect bounds) in new[] { (okButton, ok), (cancelButton, cancel) })
+        {
+            IInputElement hit = window.InputHitTest(bounds.Center);
+            Button hitButton = (hit as Visual)?.FindAncestorOfType<Button>(includeSelf: true);
+            Assert.True(hitButton == button, $"{button.Content} is covered by {(hitButton?.Content ?? hit)?.ToString()}.");
+        }
+
+        // The button column ends above the OK and Cancel row, and scrolls instead.
+        ScrollViewer column = window.GetLogicalDescendants().OfType<ScrollViewer>().Distinct()
+            .Single(x => x.Content is StackPanel panel && panel.Children.OfType<TextBlock>().Any(t => t.Text == "Timing Method"));
+        Assert.True(Bounds(column).Bottom <= ok.Top, $"Button column ends at {Bounds(column).Bottom}, OK starts at {ok.Top}.");
+        Assert.True(column.Extent.Height > column.Viewport.Height);
+
+        // The window can't be made shorter than its minimum height.
+        Assert.Equal(window.MinHeight, window.Bounds.Height, 0.5);
+
+        using (WriteableBitmap frame = window.CaptureRenderedFrame())
+        {
+            frame.Save(System.IO.Path.Combine(Fixtures.ScreenshotDirectory, "splits-editor-short.png"));
+        }
+
         window.Close();
     }
 

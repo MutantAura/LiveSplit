@@ -67,6 +67,9 @@ public sealed class SplitsEditorWindow : Window
         Title = "Splits Editor";
         Width = 820;
         Height = 620;
+        // Enough for the header, a few segments and the OK/Cancel row.
+        MinWidth = 640;
+        MinHeight = 380;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
         bool timerRunning = state.CurrentPhase != TimerPhase.NotRunning;
@@ -228,7 +231,7 @@ public sealed class SplitsEditorWindow : Window
         };
         cancel.Click += (s, e) => Close(false);
 
-        var footer = new StackPanel
+        var footerButtons = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             HorizontalAlignment = HorizontalAlignment.Right,
@@ -238,7 +241,7 @@ public sealed class SplitsEditorWindow : Window
 
         if (timerRunning)
         {
-            footer.Children.Insert(0, new TextBlock
+            footerButtons.Children.Insert(0, new TextBlock
             {
                 Text = "Segments can't be changed while the timer is running.",
                 VerticalAlignment = VerticalAlignment.Center,
@@ -246,17 +249,38 @@ public sealed class SplitsEditorWindow : Window
             });
         }
 
-        var root = new DockPanel { Margin = new Thickness(10) };
+        // The segment and comparison buttons scroll when the window is too short for them.
+        var segmentButtonScroller = new ScrollViewer
+        {
+            Content = segmentButtons,
+            HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
+            VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+            Margin = new Thickness(10, 0, 0, 0)
+        };
+
+        var content = new DockPanel { Margin = new Thickness(10, 10, 10, 0), ClipToBounds = true };
         DockPanel.SetDock(header, Dock.Top);
-        DockPanel.SetDock(footer, Dock.Bottom);
-        DockPanel.SetDock(segmentButtons, Dock.Right);
+        DockPanel.SetDock(segmentButtonScroller, Dock.Right);
         header.Margin = new Thickness(0, 0, 0, 10);
-        footer.Margin = new Thickness(0, 10, 0, 0);
-        segmentButtons.Margin = new Thickness(10, 0, 0, 0);
-        root.Children.Add(header);
+        content.Children.Add(header);
+        content.Children.Add(segmentButtonScroller);
+        content.Children.Add(grid);
+
+        // OK and Cancel get their own row at the bottom, which is sized first, so the content
+        // above can never cover them.
+        var footer = new Border
+        {
+            Child = footerButtons,
+            Padding = new Thickness(10),
+            Margin = new Thickness(0, 10, 0, 0),
+            BorderThickness = new Thickness(0, 1, 0, 0),
+            BorderBrush = new SolidColorBrush(Colors.Gray, 0.35)
+        };
+
+        var root = new Grid { RowDefinitions = new RowDefinitions("*,Auto") };
+        Grid.SetRow(footer, 1);
+        root.Children.Add(content);
         root.Children.Add(footer);
-        root.Children.Add(segmentButtons);
-        root.Children.Add(grid);
         Content = root;
 
         Refresh();
