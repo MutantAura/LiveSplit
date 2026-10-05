@@ -36,6 +36,8 @@ public static class BuiltInComponents
             new SimpleComponentFactory("Comparison Time", "Displays the final or segment time of a comparison.", ComponentCategory.Information, state => new ComparisonTime(state)));
         ComponentManager.Register("LiveSplit.TotalPlaytime.dll",
             new SimpleComponentFactory("Total Playtime", "Displays the total amount of time that the current category has been played for.", ComponentCategory.Information, state => new TotalPlaytimeComponent(state)));
+        ComponentManager.Register("LiveSplit.WorldRecord.dll",
+            new SimpleComponentFactory("World Record", "Shows the World Record for the run.", ComponentCategory.Information, state => new WorldRecordComponent(state)));
         ComponentManager.Register("LiveSplit.Text.dll",
             new SimpleComponentFactory("Text", "Displays the text that you specify.", ComponentCategory.Information, state => new TextComponent(state)));
 
