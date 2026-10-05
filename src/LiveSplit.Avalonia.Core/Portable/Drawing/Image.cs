@@ -27,11 +27,6 @@ public sealed class Image : IDisposable
         return new Image(ms.ToArray());
     }
 
-    public static Image FromFile(string path)
-    {
-        return new Image(File.ReadAllBytes(path));
-    }
-
     /// <summary>
     /// Returns the decoded bitmap, or null if the data cannot be decoded.
     /// </summary>

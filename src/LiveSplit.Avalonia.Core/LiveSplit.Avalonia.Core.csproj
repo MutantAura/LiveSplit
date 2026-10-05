@@ -41,7 +41,6 @@
                       $(SharedCorePath)/UI/Components/ComponentCategory.cs;
                       $(SharedCorePath)/UI/Components/GlobalFont.cs;
                       $(SharedCorePath)/UI/Components/GlobalFontConsumerAttribute.cs;
-                      $(SharedCorePath)/UI/Components/IDeactivatableComponent.cs;
                       $(SharedCorePath)/UI/Components/ILayoutComponent.cs;
                       $(SharedCorePath)/UI/Components/LayoutComponent.cs"
              LinkBase="Shared/UI" />

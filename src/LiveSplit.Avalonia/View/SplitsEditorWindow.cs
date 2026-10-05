@@ -5,7 +5,6 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using LiveSplit.Model;
-using LiveSplit.Model.Comparisons;
 using LiveSplit.TimeFormatters;
 using LiveSplit.UI;
 using System;

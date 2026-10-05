@@ -213,11 +213,6 @@ public partial class TimerWindow : UI.Portable.Form
             {
                 component.Dispose();
             }
-
-            foreach (IDeactivatableComponent component in layout.Components.Except(Layout.Components).OfType<IDeactivatableComponent>())
-            {
-                component.Activated = true;
-            }
         }
 
         Layout = layout;

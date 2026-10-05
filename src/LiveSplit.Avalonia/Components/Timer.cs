@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Xml;
 using Color = System.Drawing.Color;
 using Font = LiveSplit.Drawing.Font;
-using FontStyle = LiveSplit.Drawing.FontStyle;
 using GraphicsUnit = LiveSplit.Drawing.GraphicsUnit;
 
 namespace LiveSplit.UI.Components;

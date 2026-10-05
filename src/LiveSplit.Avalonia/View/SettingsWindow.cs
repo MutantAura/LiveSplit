@@ -8,7 +8,6 @@ using LiveSplit.Model.Input;
 using LiveSplit.Options;
 using LiveSplit.Themes;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 

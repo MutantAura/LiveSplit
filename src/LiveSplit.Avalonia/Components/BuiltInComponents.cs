@@ -1,4 +1,3 @@
-using LiveSplit.Model;
 
 namespace LiveSplit.UI.Components;
 

@@ -12,7 +12,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using IComponent = LiveSplit.UI.Components.IComponent;
 using MessageBox = LiveSplit.UI.MessageBox;
 
 namespace LiveSplit.View;
