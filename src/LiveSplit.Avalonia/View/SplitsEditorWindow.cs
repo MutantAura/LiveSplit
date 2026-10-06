@@ -75,6 +75,7 @@ public sealed class SplitsEditorWindow : Window
         bool timerRunning = state.CurrentPhase != TimerPhase.NotRunning;
 
         this.api = api ?? SpeedrunComApi.Shared;
+        ImagePicker = PickImage;
 
         var gameName = new TextBox { Text = run.GameName, PlaceholderText = "Game Name" };
         gameName.TextChanged += (s, e) =>
@@ -444,7 +445,20 @@ public sealed class SplitsEditorWindow : Window
             {
                 var image = new Image { Width = 20, Height = 20 };
                 image.DataContextChanged += (s, e) => image.Source = (image.DataContext as SegmentRow)?.Icon;
-                return image;
+
+                // Double-clicking the icon picks a new one, like in the Windows version. The
+                // transparent background makes the whole cell respond, not just the image.
+                var cell = new Border { Child = image, Background = Brushes.Transparent };
+                cell.DoubleTapped += async (s, e) =>
+                {
+                    if (cell.DataContext is SegmentRow row)
+                    {
+                        e.Handled = true;
+                        await SetSegmentIcon(row.Index);
+                    }
+                };
+                ToolTip.SetTip(cell, "Double-click to change the icon");
+                return cell;
             })
         });
         grid.Columns.Add(TextColumn("Segment Name", SegmentRow.NameKey, new DataGridLength(1, DataGridLengthUnitType.Star)));
@@ -619,21 +633,30 @@ public sealed class SplitsEditorWindow : Window
         Refresh();
     }
 
-    private async Task SetSegmentIcon()
+    private Task SetSegmentIcon()
     {
-        int index = SelectedIndex;
-        if (index < 0)
+        return SetSegmentIcon(SelectedIndex);
+    }
+
+    private async Task SetSegmentIcon(int index)
+    {
+        if (index < 0 || index >= run.Count)
         {
             return;
         }
 
-        Drawing.Image image = await PickImage();
+        Drawing.Image image = await ImagePicker();
         if (image != null)
         {
             run[index].Icon = image;
             Refresh();
         }
     }
+
+    /// <summary>
+    /// Asks the user for an image. Replaced by tests.
+    /// </summary>
+    internal Func<Task<Drawing.Image>> ImagePicker { get; set; }
 
     private async Task<Drawing.Image> PickImage()
     {

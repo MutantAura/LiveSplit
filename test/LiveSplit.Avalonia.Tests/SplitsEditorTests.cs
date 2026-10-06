@@ -197,6 +197,52 @@ public class SplitsEditorTests
     }
 
     [AvaloniaFact]
+    public void DoubleClickingAnIconPicksANewOne()
+    {
+        IRun run = new Run(new StandardComparisonGeneratorsFactory()) { GameName = "Celeste", CategoryName = "Any%" };
+        run.AddSegment("Prologue");
+        run.AddSegment("Forsaken City");
+        run.AddSegment("Summit");
+
+        var state = new LiveSplitState(run, null, null, null, new StandardSettingsFactory().Create());
+        var window = new SplitsEditorWindow(state, new TimerModel { CurrentState = state }, new FakeSpeedrunCom().Api);
+        var picked = new Drawing.Image([1, 2, 3]);
+        int pickerCalls = 0;
+        window.ImagePicker = () =>
+        {
+            pickerCalls++;
+            return Task.FromResult(picked);
+        };
+        window.Show();
+        Wait(() => window.PendingLookup.IsCompleted);
+        for (int i = 0; i < 4; i++)
+        {
+            Dispatcher.UIThread.RunJobs();
+            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+        }
+
+        // The icon cell of the third segment.
+        Border cell = window.GetVisualDescendants().OfType<Border>()
+            .Single(x => x.Child is Image && x.DataContext is SplitsEditorWindow.SegmentRow { Index: 2 });
+        Point center = cell.TranslatePoint(new Point(cell.Bounds.Width / 2, cell.Bounds.Height / 2), window)!.Value;
+
+        // A single click only selects.
+        window.MouseDown(center, MouseButton.Left);
+        window.MouseUp(center, MouseButton.Left);
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(0, pickerCalls);
+
+        window.MouseDown(center, MouseButton.Left);
+        window.MouseUp(center, MouseButton.Left);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal(1, pickerCalls);
+        Assert.Same(picked, run[2].Icon);
+        Assert.Null(run[1].Icon);
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void UnknownGamesKeepTheDefaultCategories()
     {
         (SplitsEditorWindow window, IRun run) = Open("Not A Real Game", "Glitchless");
