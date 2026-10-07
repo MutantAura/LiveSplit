@@ -206,6 +206,11 @@
     <Setter Property="Padding" Value="10,5" />
     <Setter Property="MinHeight" Value="34" />
   </Style>
+  <!-- Buttons place their content at the top of any space beyond their natural height;
+       center it, as the minimum height above is taller than a line of text. -->
+  <Style Selector="Button, ToggleButton, RepeatButton">
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
   <Style Selector="Button">
     <Setter Property="FontWeight" Value="SemiBold" />
   </Style>

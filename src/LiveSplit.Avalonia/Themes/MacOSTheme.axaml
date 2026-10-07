@@ -233,6 +233,8 @@
     <Setter Property="Padding" Value="12,3" />
     <Setter Property="MinHeight" Value="24" />
     <Setter Property="BorderThickness" Value="1" />
+    <!-- Center the label when the minimum height is taller than the button's content. -->
+    <Setter Property="VerticalContentAlignment" Value="Center" />
   </Style>
   <!-- The default button is filled with the accent. -->
   <Style Selector="Button[IsDefault=True] /template/ ContentPresenter#PART_ContentPresenter">
