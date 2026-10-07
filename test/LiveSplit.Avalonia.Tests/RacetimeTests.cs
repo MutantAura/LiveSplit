@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
@@ -348,6 +349,103 @@ public class RacetimeChannelTests
 
 public class RaceRoomWindowTests
 {
+    [Theory]
+    [InlineData("seed: https://example.com/seed?id=1. glhf", "https://example.com/seed?id=1")]
+    [InlineData("(see https://example.com/page)", "https://example.com/page")]
+    [InlineData("wiki https://en.wikipedia.org/wiki/Foo_(bar) ok", "https://en.wikipedia.org/wiki/Foo_(bar)")]
+    [InlineData("go to www.speedrun.com/celeste!", "https://www.speedrun.com/celeste")]
+    [InlineData("HTTP://EXAMPLE.COM/A, next", "HTTP://EXAMPLE.COM/A")]
+    public void FindsLinksInChat(string text, string expected)
+    {
+        (string Text, string Url)[] parts = [.. RaceRoomWindow.SplitLinks(text)];
+        Assert.Equal(expected, Assert.Single(parts, x => x.Url != null).Url);
+
+        // The text is kept exactly, split into plain and link parts.
+        Assert.Equal(text, string.Concat(parts.Select(x => x.Text)));
+    }
+
+    [Theory]
+    [InlineData("no links here")]
+    [InlineData("ftp://example.com/file")]
+    [InlineData("https://")]
+    [InlineData("")]
+    public void IgnoresTextThatIsNotALink(string text)
+    {
+        Assert.DoesNotContain(RaceRoomWindow.SplitLinks(text), x => x.Url != null);
+    }
+
+    [AvaloniaFact]
+    public void ClickingALinkOpensIt()
+    {
+        IRun run = new Run(new StandardComparisonGeneratorsFactory());
+        run.AddSegment("Level 1");
+        var state = new LiveSplitState(run, null, null, null, new StandardSettingsFactory().Create());
+        var authenticator = new RacetimeAuthenticator(new HttpClient(), new RacetimeTokenStore(Path.Combine(Path.GetTempPath(), $"racetime-{Guid.NewGuid()}.json")), _ => false)
+        {
+            Identity = new RacetimeUser { Id = "me", Name = "Me" }
+        };
+        var channel = new RacetimeChannel(state, new TimerModel { CurrentState = state }, new RacetimeSettings(), authenticator, "game/race") { Sender = _ => Task.CompletedTask };
+        var window = new RaceRoomWindow(channel);
+        var opened = new List<string>();
+        window.LinkOpener = url =>
+        {
+            opened.Add(url);
+            return true;
+        };
+        window.Show();
+
+        string race = RacetimeTestData.RaceMessage("open", 1, null, ("me", "Me", "not_ready", null));
+        race = race.Replace("\"info\": \"\"", "\"info\": \"Seed: https://example.com/info\"");
+        channel.HandleMessage(race);
+        channel.HandleMessage("""{"type":"chat.message","message":{"id":"m1","user":{"id":"other","name":"Other"},"message_plain":"the seed is https://example.com/seed?id=1 good luck"}}""");
+        for (int i = 0; i < 4; i++)
+        {
+            Dispatcher.UIThread.RunJobs();
+            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+        }
+
+        void Click(SelectableTextBlock block, string within)
+        {
+            int index = block.Inlines!.Text!.IndexOf(within, StringComparison.Ordinal);
+            Assert.True(index >= 0, $"'{within}' not found in '{block.Inlines.Text}'");
+            Avalonia.Rect character = block.TextLayout.HitTestTextPosition(index + 2);
+            Avalonia.Point point = block.TranslatePoint(character.Center, window)!.Value;
+            window.MouseDown(point, Avalonia.Input.MouseButton.Left);
+            window.MouseUp(point, Avalonia.Input.MouseButton.Left);
+            Dispatcher.UIThread.RunJobs();
+        }
+
+        List<SelectableTextBlock> blocks = [.. window.GetLogicalDescendants().OfType<SelectableTextBlock>().Distinct()];
+        SelectableTextBlock chat = blocks.Single(x => x.Inlines?.Text?.Contains("good luck") == true);
+        SelectableTextBlock info = blocks.Single(x => x.Inlines?.Text?.Contains("Seed:") == true);
+
+        // Plain text doesn't open anything.
+        Click(chat, "good luck");
+        Assert.Empty(opened);
+
+        Click(chat, "https://example.com/seed");
+        Assert.Equal(["https://example.com/seed?id=1"], opened);
+
+        Click(info, "https://example.com/info");
+        Assert.Equal(["https://example.com/seed?id=1", "https://example.com/info"], opened);
+
+        // A pinned bot message that wraps, with the link at its end.
+        channel.HandleMessage("""{"type":"chat.message","message":{"id":"m2","user":null,"bot":"Mido","is_bot":true,"is_pinned":true,"message_plain":"Welcome! This is a practice room for the Rupees Of Time tournament. Learn more about the event at https://midos.house/event/rot/1"}}""");
+        for (int i = 0; i < 4; i++)
+        {
+            Dispatcher.UIThread.RunJobs();
+            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+        }
+
+        SelectableTextBlock pinned = window.GetLogicalDescendants().OfType<SelectableTextBlock>().Distinct()
+            .Single(x => x.Inlines?.Text?.Contains("Rupees Of Time") == true);
+        Assert.True(pinned.TextLayout.TextLines.Count > 1, "The message should wrap, putting the link on a later line.");
+        Click(pinned, "https://midos.house");
+        Assert.Equal("https://midos.house/event/rot/1", opened[^1]);
+
+        window.Close();
+    }
+
     [AvaloniaFact]
     public void ShowsRaceEntrantsAndChat()
     {
@@ -376,14 +474,14 @@ public class RaceRoomWindowTests
 
         channel.HandleMessage(RacetimeTestData.RaceMessage("open", 1, null, ("me", "Me", "not_ready", null), ("other", "Other", "ready", null)));
         channel.HandleMessage("""{"type":"chat.message","message":{"id":"m0","user":null,"is_system":true,"message_plain":"Other is ready! (1 remaining)","highlight":false}}""");
-        channel.HandleMessage("""{"type":"chat.message","message":{"id":"m1","user":{"id":"other","name":"Other"},"message_plain":"glhf"}}""");
+        channel.HandleMessage("""{"type":"chat.message","message":{"id":"m1","user":{"id":"other","name":"Other"},"message_plain":"glhf, rules: https://racetime.gg/about/rules."}}""");
         channel.HandleMessage("""{"type":"error","errors":["You cannot .done at this time."]}""");
         Dispatcher.UIThread.RunJobs();
 
         Assert.Equal("Any% [Game] - race", window.Title);
         List<string> texts = [.. window.GetLogicalDescendants().OfType<TextBlock>().Select(x => x.Text)];
         Assert.Contains("Other", texts);
-        Assert.Contains(window.GetLogicalDescendants().OfType<SelectableTextBlock>(), x => x.Inlines.Text.Contains("glhf"));
+        Assert.Contains(window.GetLogicalDescendants().OfType<SelectableTextBlock>(), x => x.Inlines?.Text?.Contains("glhf") == true);
 
         List<Button> actions = [.. window.GetLogicalDescendants().OfType<Button>().Where(x => x.Content is "Ready" or "Leave Race")];
         Assert.Equal(2, actions.Count);

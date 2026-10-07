@@ -3,14 +3,17 @@ using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Controls.Templates;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
 using LiveSplit.Racetime;
 using LiveSplit.UI;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace LiveSplit.View;
@@ -20,11 +23,13 @@ namespace LiveSplit.View;
 /// the WebView2-hosted page of the Windows version with native controls, so it works the same on
 /// every platform.
 /// </summary>
-public sealed class RaceRoomWindow : Window
+public sealed partial class RaceRoomWindow : Window
 {
     private const int MaxChatMessages = 1000;
 
     private static readonly IBrush MutedBrush = Brushes.Gray;
+    private static readonly IBrush LinkBrush = new SolidColorBrush(Color.FromRgb(0x3B, 0x9B, 0xFF));
+    private static readonly Cursor LinkCursor = new(StandardCursorType.Hand);
     private static readonly IBrush ErrorBrush = new SolidColorBrush(Color.FromRgb(0xE5, 0x48, 0x4D));
     private static readonly IBrush SystemBrush = new SolidColorBrush(Color.FromRgb(0x5B, 0x9B, 0xD5));
     private static readonly IBrush HighlightBrush = new SolidColorBrush(Color.FromArgb(0x30, 0xFF, 0xC1, 0x07));
@@ -34,7 +39,7 @@ public sealed class RaceRoomWindow : Window
     private readonly ObservableCollection<Entrant> entrants = [];
     private readonly TextBlock gameText;
     private readonly TextBlock goalText;
-    private readonly TextBlock infoText;
+    private readonly SelectableTextBlock infoText;
     private readonly TextBlock raceStatusText;
     private readonly TextBlock connectionText;
     private readonly WrapPanel actionPanel;
@@ -56,7 +61,9 @@ public sealed class RaceRoomWindow : Window
 
         gameText = new TextBlock { FontSize = 18, FontWeight = FontWeight.Bold, TextTrimming = TextTrimming.CharacterEllipsis };
         goalText = new TextBlock { FontSize = 14, TextWrapping = TextWrapping.Wrap };
-        infoText = new TextBlock { TextWrapping = TextWrapping.Wrap, Foreground = MutedBrush, IsVisible = false };
+        // Race info often contains links, e.g. to the seed or patch for the race.
+        infoText = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap, Foreground = MutedBrush, IsVisible = false };
+        EnableLinks(infoText);
         raceStatusText = new TextBlock { FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center };
         connectionText = new TextBlock { Foreground = MutedBrush, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
 
@@ -162,7 +169,9 @@ public sealed class RaceRoomWindow : Window
         Title = $"{race.Goal} [{race.GameName}] - {race.Slug}";
         gameText.Text = race.GameName;
         goalText.Text = race.Goal;
-        infoText.Text = race.Info;
+        infoText.Inlines.Clear();
+        infoText.Tag = null;
+        AddLinkedText(infoText, race.Info);
         infoText.IsVisible = !string.IsNullOrWhiteSpace(race.Info);
 
         entrants.Clear();
@@ -270,22 +279,22 @@ public sealed class RaceRoomWindow : Window
 
         // Only set a foreground where it differs: a null brush would hide the text rather than
         // inherit the theme's text color.
-        var body = new Run((message.IsPinned ? "📌 " : "") + message.Text)
-        {
-            FontStyle = message.Kind == ChatMessageKind.System ? FontStyle.Italic : FontStyle.Normal
-        };
         IBrush bodyBrush = message.Kind switch
         {
             ChatMessageKind.Error => ErrorBrush,
             ChatMessageKind.System or ChatMessageKind.LiveSplit => MutedBrush,
             _ => null
         };
-        if (bodyBrush != null)
-        {
-            body.Foreground = bodyBrush;
-        }
 
-        text.Inlines.Add(body);
+        AddLinkedText(text, (message.IsPinned ? "📌 " : "") + message.Text, run =>
+        {
+            run.FontStyle = message.Kind == ChatMessageKind.System ? FontStyle.Italic : FontStyle.Normal;
+            if (bodyBrush != null)
+            {
+                run.Foreground = bodyBrush;
+            }
+        });
+        EnableLinks(text);
 
         return new Border
         {
@@ -295,6 +304,138 @@ public sealed class RaceRoomWindow : Window
             Background = message.Highlight && message.Kind != ChatMessageKind.Error ? HighlightBrush : null
         };
     }
+
+    #region Links
+
+    /// <summary>
+    /// Opens a clicked link. Replaced by tests.
+    /// </summary>
+    internal Func<string, bool> LinkOpener { get; set; } = UrlLauncher.Open;
+
+    internal sealed record LinkSpan(int Start, int Length, string Url);
+
+    [GeneratedRegex(@"(?:https?://|www\.)[^\s<>""]+", RegexOptions.IgnoreCase)]
+    private static partial Regex UrlPattern();
+
+    /// <summary>
+    /// Splits text into plain parts and links (with the address to open). Punctuation that
+    /// usually follows a link in a sentence, like a full stop or a closing bracket that has no
+    /// opening one in the link, is left out of it.
+    /// </summary>
+    internal static IEnumerable<(string Text, string Url)> SplitLinks(string text)
+    {
+        text ??= "";
+        int position = 0;
+        foreach (Match match in UrlPattern().Matches(text))
+        {
+            string candidate = match.Value;
+            while (candidate.Length > 0 && IsTrailingPunctuation(candidate))
+            {
+                candidate = candidate[..^1];
+            }
+
+            string url = candidate.StartsWith("www.", StringComparison.OrdinalIgnoreCase) ? "https://" + candidate : candidate;
+            if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uri) || uri.Scheme is not ("http" or "https") || string.IsNullOrEmpty(uri.Host))
+            {
+                continue;
+            }
+
+            if (match.Index > position)
+            {
+                yield return (text[position..match.Index], null);
+            }
+
+            yield return (candidate, url);
+            position = match.Index + candidate.Length;
+        }
+
+        if (position < text.Length)
+        {
+            yield return (text[position..], null);
+        }
+    }
+
+    private static bool IsTrailingPunctuation(string candidate)
+    {
+        char last = candidate[^1];
+        return last switch
+        {
+            '.' or ',' or ';' or ':' or '!' or '?' or '\'' => true,
+            ')' => candidate.Count(c => c == '(') < candidate.Count(c => c == ')'),
+            ']' => candidate.Count(c => c == '[') < candidate.Count(c => c == ']'),
+            _ => false
+        };
+    }
+
+    /// <summary>
+    /// Adds text to the block, with links underlined in the link color and remembered for
+    /// <see cref="EnableLinks"/>.
+    /// </summary>
+    private static void AddLinkedText(SelectableTextBlock block, string text, Action<Run> style = null)
+    {
+        var links = block.Tag as List<LinkSpan> ?? [];
+        block.Tag = links;
+
+        foreach ((string part, string url) in SplitLinks(text))
+        {
+            var run = new Run(part);
+            style?.Invoke(run);
+            if (url != null)
+            {
+                links.Add(new LinkSpan(block.Inlines.Text?.Length ?? 0, part.Length, url));
+                run.Foreground = LinkBrush;
+                run.TextDecorations = TextDecorations.Underline;
+            }
+
+            block.Inlines.Add(run);
+        }
+    }
+
+    /// <summary>
+    /// Makes the links added with <see cref="AddLinkedText"/> clickable. Text can still be
+    /// selected by dragging, which doesn't open links.
+    /// </summary>
+    private void EnableLinks(SelectableTextBlock block)
+    {
+        block.PointerMoved += (s, e) =>
+        {
+            if (LinkAt(block, e.GetPosition(block)) != null)
+            {
+                block.Cursor = LinkCursor;
+            }
+            else
+            {
+                block.ClearValue(CursorProperty);
+            }
+        };
+
+        // Selectable text handles the pointer itself, so listen to handled events too.
+        block.AddHandler(PointerReleasedEvent, (s, e) =>
+        {
+            if (e.InitialPressMouseButton == MouseButton.Left
+                && string.IsNullOrEmpty(block.SelectedText)
+                && LinkAt(block, e.GetPosition(block)) is string url)
+            {
+                e.Handled = true;
+                LinkOpener(url);
+            }
+        }, RoutingStrategies.Bubble, handledEventsToo: true);
+    }
+
+    private static string LinkAt(SelectableTextBlock block, Point point)
+    {
+        if (block.Tag is not List<LinkSpan> { Count: > 0 } links)
+        {
+            return null;
+        }
+
+        // Check the areas the links occupy (one per line when a link wraps) rather than the hit
+        // test's IsInside, which is false for points on wrapped lines.
+        point -= new Point(block.Padding.Left, block.Padding.Top);
+        return links.FirstOrDefault(link => block.TextLayout.HitTestTextRange(link.Start, link.Length).Any(area => area.Contains(point)))?.Url;
+    }
+
+    #endregion
 
     private Control BuildEntrant(Entrant entrant)
     {
