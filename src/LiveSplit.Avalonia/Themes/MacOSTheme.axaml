@@ -237,17 +237,17 @@
     <Setter Property="VerticalContentAlignment" Value="Center" />
   </Style>
   <!-- The default button is filled with the accent. -->
-  <Style Selector="Button[IsDefault=True] /template/ ContentPresenter#PART_ContentPresenter">
+  <Style Selector=":is(Window).theme-macos Button[IsDefault=True] /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource AccentButtonBackground}" />
     <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorderBrush}" />
     <Setter Property="Foreground" Value="{DynamicResource AccentButtonForeground}" />
   </Style>
-  <Style Selector="Button[IsDefault=True]:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+  <Style Selector=":is(Window).theme-macos Button[IsDefault=True]:pointerover /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource AccentButtonBackgroundPointerOver}" />
     <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorderBrushPointerOver}" />
     <Setter Property="Foreground" Value="{DynamicResource AccentButtonForegroundPointerOver}" />
   </Style>
-  <Style Selector="Button[IsDefault=True]:pressed /template/ ContentPresenter#PART_ContentPresenter">
+  <Style Selector=":is(Window).theme-macos Button[IsDefault=True]:pressed /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource AccentButtonBackgroundPressed}" />
     <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorderBrushPressed}" />
     <Setter Property="Foreground" Value="{DynamicResource AccentButtonForegroundPressed}" />
@@ -260,7 +260,7 @@
   <Style Selector="TextBox, AutoCompleteBox">
     <Setter Property="MinHeight" Value="24" />
   </Style>
-  <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+  <Style Selector=":is(Window).theme-macos TextBox:focus /template/ Border#PART_BorderElement">
     <Setter Property="BorderThickness" Value="2" />
   </Style>
   <Style Selector="CheckBox">
@@ -276,11 +276,11 @@
   </Style>
 
   <!-- Tabs as a centered segmented control. -->
-  <Style Selector="TabControl /template/ ItemsPresenter#PART_ItemsPresenter">
+  <Style Selector=":is(Window).theme-macos TabControl /template/ ItemsPresenter#PART_ItemsPresenter">
     <Setter Property="HorizontalAlignment" Value="Center" />
     <Setter Property="Margin" Value="0,0,0,8" />
   </Style>
-  <Style Selector="TabControl /template/ ItemsPresenter#PART_ItemsPresenter > WrapPanel">
+  <Style Selector=":is(Window).theme-macos TabControl /template/ ItemsPresenter#PART_ItemsPresenter > WrapPanel">
     <Setter Property="Background" Value="{DynamicResource MacOSSegmentedTrackBrush}" />
   </Style>
   <Style Selector="TabItem">
@@ -291,7 +291,7 @@
     <Setter Property="Margin" Value="2" />
     <Setter Property="CornerRadius" Value="5" />
   </Style>
-  <Style Selector="TabItem /template/ Border#PART_SelectedPipe">
+  <Style Selector=":is(Window).theme-macos TabItem /template/ Border#PART_SelectedPipe">
     <Setter Property="IsVisible" Value="False" />
   </Style>
 

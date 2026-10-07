@@ -141,6 +141,7 @@ public static class ThemeManager
                 if (sender is Window window && !openWindows.Contains(window))
                 {
                     openWindows.Add(window);
+                    TagWindow(window);
                     Decorate(window);
                 }
             });
@@ -224,6 +225,7 @@ public static class ThemeManager
 
         foreach (Window window in openWindows.ToList())
         {
+            TagWindow(window);
             Decorate(window);
         }
     }
@@ -232,6 +234,26 @@ public static class ThemeManager
     /// Applies per-window effects that styles can't express: the Mica backdrop of WinUI 3 on
     /// Windows 11. The timer window is drawn by the layout and is left alone.
     /// </summary>
+    /// <summary>
+    /// Marks the window with the current theme (e.g. "theme-classic"). Styles that reach into
+    /// control templates only apply within windows marked with their theme: Avalonia doesn't
+    /// remove such styles from template parts when a theme's style layer is removed, but it does
+    /// when they stop matching, so switching the mark switches them off.
+    /// </summary>
+    private static void TagWindow(Window window)
+    {
+        string themeClass = "theme-" + Theme.ToString().ToLowerInvariant();
+        foreach (string old in window.Classes.Where(x => x.StartsWith("theme-", StringComparison.Ordinal) && x != themeClass).ToList())
+        {
+            window.Classes.Remove(old);
+        }
+
+        if (!window.Classes.Contains(themeClass))
+        {
+            window.Classes.Add(themeClass);
+        }
+    }
+
     private static void Decorate(Window window)
     {
         if (window is TimerWindow)

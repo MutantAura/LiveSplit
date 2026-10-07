@@ -176,7 +176,7 @@
     <Setter Property="Background" Value="#FFFFFF" />
     <Setter Property="BorderBrush" Value="#7A7A7A" />
   </Style>
-  <Style Selector="ComboBox /template/ TextBox#PART_EditableTextBox">
+  <Style Selector=":is(Window).theme-classic ComboBox /template/ TextBox#PART_EditableTextBox">
     <Setter Property="MinHeight" Value="0" />
   </Style>
   <Style Selector="ComboBoxItem">
@@ -188,11 +188,11 @@
   <Style Selector="NumericUpDown, ButtonSpinner">
     <Setter Property="MinHeight" Value="21" />
   </Style>
-  <Style Selector="ButtonSpinner /template/ RepeatButton">
+  <Style Selector=":is(Window).theme-classic ButtonSpinner /template/ RepeatButton">
     <Setter Property="MinHeight" Value="0" />
     <Setter Property="Padding" Value="3,0" />
   </Style>
-  <Style Selector="NumericUpDown /template/ TextBox#PART_TextBox">
+  <Style Selector=":is(Window).theme-classic NumericUpDown /template/ TextBox#PART_TextBox">
     <Setter Property="MinHeight" Value="0" />
   </Style>
 
@@ -202,28 +202,28 @@
   <Style Selector="CheckBox">
     <Setter Property="MinHeight" Value="20" />
   </Style>
-  <Style Selector="CheckBox:checked /template/ Grid#RootGrid > Grid, CheckBox:unchecked /template/ Grid#RootGrid > Grid, CheckBox:indeterminate /template/ Grid#RootGrid > Grid">
+  <Style Selector=":is(Window).theme-classic CheckBox:checked /template/ Grid#RootGrid > Grid, :is(Window).theme-classic CheckBox:unchecked /template/ Grid#RootGrid > Grid, :is(Window).theme-classic CheckBox:indeterminate /template/ Grid#RootGrid > Grid">
     <Setter Property="Height" Value="20" />
   </Style>
-  <Style Selector="CheckBox:checked /template/ Viewbox, CheckBox:unchecked /template/ Viewbox, CheckBox:indeterminate /template/ Viewbox">
+  <Style Selector=":is(Window).theme-classic CheckBox:checked /template/ Viewbox, :is(Window).theme-classic CheckBox:unchecked /template/ Viewbox, :is(Window).theme-classic CheckBox:indeterminate /template/ Viewbox">
     <Setter Property="Width" Value="13" />
     <Setter Property="Height" Value="13" />
   </Style>
-  <Style Selector="CheckBox:checked /template/ Border#NormalRectangle, CheckBox:unchecked /template/ Border#NormalRectangle, CheckBox:indeterminate /template/ Border#NormalRectangle">
+  <Style Selector=":is(Window).theme-classic CheckBox:checked /template/ Border#NormalRectangle, :is(Window).theme-classic CheckBox:unchecked /template/ Border#NormalRectangle, :is(Window).theme-classic CheckBox:indeterminate /template/ Border#NormalRectangle">
     <Setter Property="Width" Value="13" />
     <Setter Property="Height" Value="13" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="Background" Value="#FFFFFF" />
     <Setter Property="BorderBrush" Value="#333333" />
   </Style>
-  <Style Selector="CheckBox:pointerover /template/ Border#NormalRectangle, CheckBox:checked:pointerover /template/ Border#NormalRectangle">
+  <Style Selector=":is(Window).theme-classic CheckBox:pointerover /template/ Border#NormalRectangle, :is(Window).theme-classic CheckBox:checked:pointerover /template/ Border#NormalRectangle">
     <Setter Property="BorderBrush" Value="#0078D7" />
   </Style>
-  <Style Selector="CheckBox:pressed /template/ Border#NormalRectangle, CheckBox:checked:pressed /template/ Border#NormalRectangle">
+  <Style Selector=":is(Window).theme-classic CheckBox:pressed /template/ Border#NormalRectangle, :is(Window).theme-classic CheckBox:checked:pressed /template/ Border#NormalRectangle">
     <Setter Property="Background" Value="#CCE4F7" />
     <Setter Property="BorderBrush" Value="#005499" />
   </Style>
-  <Style Selector="CheckBox:disabled /template/ Border#NormalRectangle, CheckBox:checked:disabled /template/ Border#NormalRectangle">
+  <Style Selector=":is(Window).theme-classic CheckBox:disabled /template/ Border#NormalRectangle, :is(Window).theme-classic CheckBox:checked:disabled /template/ Border#NormalRectangle">
     <Setter Property="Background" Value="#F0F0F0" />
     <Setter Property="BorderBrush" Value="#BCBCBC" />
   </Style>
@@ -239,7 +239,7 @@
     <Setter Property="Padding" Value="4,2" />
     <Setter Property="MinHeight" Value="17" />
   </Style>
-  <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter, ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter, ListBoxItem:selected:pressed /template/ ContentPresenter#PART_ContentPresenter">
+  <Style Selector=":is(Window).theme-classic ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter, :is(Window).theme-classic ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter, :is(Window).theme-classic ListBoxItem:selected:pressed /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="#0078D7" />
     <Setter Property="Foreground" Value="#FFFFFF" />
   </Style>
@@ -260,10 +260,10 @@
     <Setter Property="Padding" Value="8,3,8,4" />
     <Setter Property="ZIndex" Value="1" />
   </Style>
-  <Style Selector="TabItem /template/ Border#PART_SelectedPipe">
+  <Style Selector=":is(Window).theme-classic TabItem /template/ Border#PART_SelectedPipe">
     <Setter Property="IsVisible" Value="False" />
   </Style>
-  <Style Selector="TabControl /template/ ContentPresenter#PART_SelectedContentHost, TabControl /template/ ContentPresenter#PART_SelectedContentHost2">
+  <Style Selector=":is(Window).theme-classic TabControl /template/ ContentPresenter#PART_SelectedContentHost, :is(Window).theme-classic TabControl /template/ ContentPresenter#PART_SelectedContentHost2">
     <Setter Property="Background" Value="#FFFFFF" />
     <Setter Property="BorderBrush" Value="#D9D9D9" />
     <Setter Property="BorderThickness" Value="1" />

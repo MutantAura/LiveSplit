@@ -3,6 +3,7 @@ using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using LiveSplit.Model;
 using LiveSplit.Model.Comparisons;
 using LiveSplit.Model.RunFactories;
@@ -13,6 +14,7 @@ using LiveSplit.UI.Components;
 using LiveSplit.UI.LayoutFactories;
 using LiveSplit.View;
 using System.IO;
+using System.Linq;
 using Xunit;
 
 namespace LiveSplit.Tests;
@@ -99,6 +101,62 @@ public class ThemeTests
     public void DefaultsToThePlatformTheme(bool isWindows, bool isWindows11, bool isMacOS, AppTheme expected)
     {
         Assert.Equal(expected, ThemeManager.GetPlatformDefault(isWindows, isWindows11, isMacOS));
+    }
+
+    /// <summary>
+    /// Regression test: after switching from Classic to Fluent, the settings window kept
+    /// Classic's white tab page and small check boxes (styles of control template parts), which
+    /// made Fluent's light text unreadable in dark mode. Open windows must look like newly
+    /// opened ones after switching.
+    /// </summary>
+    [AvaloniaTheory]
+    [InlineData(AppTheme.Classic)]
+    [InlineData(AppTheme.MacOS)]
+    public void SwitchingThemesRemovesThePreviousThemesTemplateStyles(AppTheme from)
+    {
+        AppTheme previousTheme = ThemeManager.Theme;
+        ThemeMode previousMode = ThemeManager.Mode;
+        try
+        {
+            string Describe(Window window)
+            {
+                Avalonia.Controls.Presenters.ContentPresenter page = window.GetVisualDescendants().OfType<Avalonia.Controls.Presenters.ContentPresenter>()
+                    .First(x => x.Name == "PART_SelectedContentHost");
+                Border checkBox = window.GetVisualDescendants().OfType<Border>().First(x => x.Name == "NormalRectangle");
+                Border pipe = window.GetVisualDescendants().OfType<TabItem>().First(x => x.IsSelected)
+                    .GetVisualDescendants().OfType<Border>().First(x => x.Name == "PART_SelectedPipe");
+                Avalonia.Controls.Presenters.ItemsPresenter tabStrip = window.GetVisualDescendants().OfType<Avalonia.Controls.Presenters.ItemsPresenter>()
+                    .First(x => x.Name == "PART_ItemsPresenter");
+                return $"page={page.Background} {page.BorderThickness}, check box={checkBox.Width}x{checkBox.Height}, "
+                    + $"tab underline={pipe.IsVisible}, tab strip={tabStrip.HorizontalAlignment}";
+            }
+
+            Window Open()
+            {
+                var window = new SettingsWindow(new StandardSettingsFactory().Create(), "Default", null);
+                window.Show();
+                Dispatcher.UIThread.RunJobs();
+                return window;
+            }
+
+            ThemeManager.Apply(AppTheme.Fluent, ThemeMode.Dark);
+            Window reference = Open();
+            string expected = Describe(reference);
+            reference.Close();
+
+            ThemeManager.Apply(from, ThemeMode.Dark);
+            Window window = Open();
+            Assert.NotEqual(expected, Describe(window));
+
+            ThemeManager.Apply(AppTheme.Fluent, ThemeMode.Dark);
+            Dispatcher.UIThread.RunJobs();
+            Assert.Equal(expected, Describe(window));
+            window.Close();
+        }
+        finally
+        {
+            ThemeManager.Apply(previousTheme, previousMode);
+        }
     }
 
     [AvaloniaFact]
