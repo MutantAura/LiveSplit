@@ -1,0 +1,302 @@
+<!--
+  The look of the Windows Forms version of LiveSplit (Windows Forms controls with visual styles
+  on Windows 10/11), layered on top of Avalonia's Fluent theme. Dialogs use the Windows Forms
+  default font (Microsoft Sans Serif 8.25pt), the system colors (Control #F0F0F0, Window white,
+  Highlight #0078D7) and square, compact controls: 23px buttons with a gray border that turns
+  blue on hover, 20px text boxes, black check marks, folder-style tabs on a white page and
+  scroll bars that are always shown. Windows Forms has no dark mode, so this theme is always light.
+-->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="LiveSplit.Themes.ClassicTheme">
+
+  <Styles.Resources>
+    <ResourceDictionary>
+      <!-- SystemColors.Highlight -->
+      <Color x:Key="SystemAccentColor">#0078D7</Color>
+      <Color x:Key="SystemAccentColorDark1">#005499</Color>
+      <Color x:Key="SystemAccentColorDark2">#004275</Color>
+      <Color x:Key="SystemAccentColorDark3">#002642</Color>
+      <Color x:Key="SystemAccentColorLight1">#429CE3</Color>
+      <Color x:Key="SystemAccentColorLight2">#76B9ED</Color>
+      <Color x:Key="SystemAccentColorLight3">#CCE4F7</Color>
+
+      <!-- SystemColors.Control / ControlText / GrayText. Fluent paints windows with SystemRegionBrush. -->
+      <Color x:Key="SystemRegionColor">#F0F0F0</Color>
+      <SolidColorBrush x:Key="SystemRegionBrush" Color="#F0F0F0" />
+      <SolidColorBrush x:Key="SystemControlBackgroundAltHighBrush" Color="#F0F0F0" />
+      <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrush" Color="#000000" />
+      <SolidColorBrush x:Key="SystemControlForegroundBaseMediumBrush" Color="#6D6D6D" />
+
+      <!-- Buttons -->
+      <SolidColorBrush x:Key="ButtonBackground" Color="#E1E1E1" />
+      <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#E5F1FB" />
+      <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#CCE4F7" />
+      <SolidColorBrush x:Key="ButtonBackgroundDisabled" Color="#CCCCCC" />
+      <SolidColorBrush x:Key="ButtonBorderBrush" Color="#ADADAD" />
+      <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#0078D7" />
+      <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#005499" />
+      <SolidColorBrush x:Key="ButtonBorderBrushDisabled" Color="#BFBFBF" />
+      <SolidColorBrush x:Key="ButtonForeground" Color="#000000" />
+      <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#000000" />
+      <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#000000" />
+      <SolidColorBrush x:Key="ButtonForegroundDisabled" Color="#838383" />
+
+      <!-- Accent buttons don't exist in Windows Forms; they look like any other button. -->
+      <SolidColorBrush x:Key="AccentButtonBackground" Color="#E1E1E1" />
+      <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="#E5F1FB" />
+      <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="#CCE4F7" />
+      <SolidColorBrush x:Key="AccentButtonBorderBrush" Color="#0078D7" />
+      <SolidColorBrush x:Key="AccentButtonBorderBrushPointerOver" Color="#0078D7" />
+      <SolidColorBrush x:Key="AccentButtonBorderBrushPressed" Color="#005499" />
+      <SolidColorBrush x:Key="AccentButtonForeground" Color="#000000" />
+      <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="#000000" />
+      <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="#000000" />
+
+      <!-- Text boxes: SystemColors.Window with a dark gray border, blue when focused. -->
+      <SolidColorBrush x:Key="TextControlBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="#F0F0F0" />
+      <SolidColorBrush x:Key="TextControlBorderBrush" Color="#7A7A7A" />
+      <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#171717" />
+      <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#0078D7" />
+      <SolidColorBrush x:Key="TextControlBorderBrushDisabled" Color="#CCCCCC" />
+      <SolidColorBrush x:Key="TextControlForeground" Color="#000000" />
+      <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#000000" />
+      <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#000000" />
+      <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#6D6D6D" />
+      <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="#0078D7" />
+      <Thickness x:Key="TextControlBorderThemeThickness">1</Thickness>
+      <Thickness x:Key="TextControlBorderThemeThicknessFocused">1</Thickness>
+
+      <!-- Drop-down lists look like buttons. -->
+      <SolidColorBrush x:Key="ComboBoxBackground" Color="#E1E1E1" />
+      <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#E5F1FB" />
+      <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#CCE4F7" />
+      <SolidColorBrush x:Key="ComboBoxBackgroundFocused" Color="#E1E1E1" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#ADADAD" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="#0078D7" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="#005499" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrushFocused" Color="#0078D7" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#646464" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="#0078D7" />
+      <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="#0078D7" />
+      <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPointerOver" Color="#0078D7" />
+      <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPointerOver" Color="#FFFFFF" />
+
+      <!-- Check boxes: a white box with a black check mark; blue while hovered. -->
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUnchecked" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPressed" Color="#CCE4F7" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="#333333" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" Color="#0078D7" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPressed" Color="#005499" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" Color="#CCE4F7" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeChecked" Color="#333333" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPointerOver" Color="#0078D7" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPressed" Color="#005499" />
+      <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundChecked" Color="#000000" />
+      <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPointerOver" Color="#0078D7" />
+      <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPressed" Color="#005499" />
+
+      <!-- Context menus -->
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#F2F2F2" />
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#CCCCCC" />
+      <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#CCE8FF" />
+      <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#99D1FF" />
+      <SolidColorBrush x:Key="MenuFlyoutItemForegroundPointerOver" Color="#000000" />
+      <SolidColorBrush x:Key="MenuFlyoutItemForegroundPressed" Color="#000000" />
+      <Thickness x:Key="MenuFlyoutPresenterThemePadding">2</Thickness>
+
+      <!-- Lists highlight the selection with SystemColors.Highlight. -->
+      <SolidColorBrush x:Key="SystemControlHighlightListLowBrush" Color="#E5F3FF" />
+      <SolidColorBrush x:Key="SystemControlHighlightListAccentLowBrush" Color="#0078D7" />
+      <SolidColorBrush x:Key="SystemControlHighlightListAccentMediumBrush" Color="#0078D7" />
+      <SolidColorBrush x:Key="SystemControlHighlightListAccentHighBrush" Color="#005499" />
+
+      <!-- Folder tabs on a white page. -->
+      <SolidColorBrush x:Key="TabItemHeaderBackgroundUnselected" Color="#F0F0F0" />
+      <SolidColorBrush x:Key="TabItemHeaderBackgroundUnselectedPointerOver" Color="#D8EAF9" />
+      <SolidColorBrush x:Key="TabItemHeaderBackgroundUnselectedPressed" Color="#CCE4F7" />
+      <SolidColorBrush x:Key="TabItemHeaderBackgroundSelected" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="TabItemHeaderBackgroundSelectedPointerOver" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="TabItemHeaderBackgroundSelectedPressed" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="TabItemHeaderForegroundUnselected" Color="#000000" />
+      <SolidColorBrush x:Key="TabItemHeaderForegroundUnselectedPointerOver" Color="#000000" />
+      <SolidColorBrush x:Key="TabItemHeaderForegroundSelected" Color="#000000" />
+      <SolidColorBrush x:Key="TabItemHeaderForegroundSelectedPointerOver" Color="#000000" />
+      <SolidColorBrush x:Key="TabItemHeaderSelectedPipeFill" Color="Transparent" />
+
+      <SolidColorBrush x:Key="ToolTipBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ToolTipForeground" Color="#575757" />
+      <SolidColorBrush x:Key="ToolTipBorderBrush" Color="#767676" />
+
+      <CornerRadius x:Key="ControlCornerRadius">0</CornerRadius>
+      <CornerRadius x:Key="OverlayCornerRadius">0</CornerRadius>
+      <!-- The Windows Forms default font, then look-alikes on other systems. -->
+      <FontFamily x:Key="ContentControlThemeFontFamily">Microsoft Sans Serif, Liberation Sans, Arial, Helvetica, fonts:Inter#Inter</FontFamily>
+      <x:Double x:Key="ControlContentThemeFontSize">11</x:Double>
+      <x:Double x:Key="TabItemHeaderFontSize">11</x:Double>
+      <x:Double x:Key="TextControlThemeMinHeight">20</x:Double>
+      <Thickness x:Key="TextControlThemePadding">3,2,3,2</Thickness>
+      <x:Double x:Key="ComboBoxMinHeight">21</x:Double>
+    </ResourceDictionary>
+  </Styles.Resources>
+
+  <Style Selector="Window">
+    <Setter Property="FontFamily" Value="{DynamicResource ContentControlThemeFontFamily}" />
+    <Setter Property="FontSize" Value="11" />
+  </Style>
+
+  <!-- Compact controls, sized like their Windows Forms counterparts. -->
+  <Style Selector="Button, ToggleButton, RepeatButton">
+    <Setter Property="Padding" Value="8,2" />
+    <Setter Property="MinHeight" Value="23" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="TextBox, AutoCompleteBox">
+    <Setter Property="MinHeight" Value="20" />
+  </Style>
+  <Style Selector="TextBox">
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="ComboBox">
+    <Setter Property="MinHeight" Value="21" />
+    <Setter Property="Padding" Value="4,1,2,1" />
+  </Style>
+  <!-- An editable drop-down looks like a text box with a drop-down button. -->
+  <Style Selector="ComboBox[IsEditable=True]">
+    <Setter Property="Background" Value="#FFFFFF" />
+    <Setter Property="BorderBrush" Value="#7A7A7A" />
+  </Style>
+  <Style Selector="ComboBox /template/ TextBox#PART_EditableTextBox">
+    <Setter Property="MinHeight" Value="0" />
+  </Style>
+  <Style Selector="ComboBoxItem">
+    <Setter Property="Padding" Value="4,1" />
+    <Setter Property="MinHeight" Value="17" />
+  </Style>
+
+  <!-- Number boxes: a text box with small arrow buttons. -->
+  <Style Selector="NumericUpDown, ButtonSpinner">
+    <Setter Property="MinHeight" Value="21" />
+  </Style>
+  <Style Selector="ButtonSpinner /template/ RepeatButton">
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Padding" Value="3,0" />
+  </Style>
+  <Style Selector="NumericUpDown /template/ TextBox#PART_TextBox">
+    <Setter Property="MinHeight" Value="0" />
+  </Style>
+
+  <!-- Check boxes: a 13px white box with a dark border and a black check mark. The template's
+       own sizes and the Fluent theme's state styles take precedence over plain styles, so these
+       styles match every check state (:checked, :unchecked or :indeterminate) to apply. -->
+  <Style Selector="CheckBox">
+    <Setter Property="MinHeight" Value="20" />
+  </Style>
+  <Style Selector="CheckBox:checked /template/ Grid#RootGrid > Grid, CheckBox:unchecked /template/ Grid#RootGrid > Grid, CheckBox:indeterminate /template/ Grid#RootGrid > Grid">
+    <Setter Property="Height" Value="20" />
+  </Style>
+  <Style Selector="CheckBox:checked /template/ Viewbox, CheckBox:unchecked /template/ Viewbox, CheckBox:indeterminate /template/ Viewbox">
+    <Setter Property="Width" Value="13" />
+    <Setter Property="Height" Value="13" />
+  </Style>
+  <Style Selector="CheckBox:checked /template/ Border#NormalRectangle, CheckBox:unchecked /template/ Border#NormalRectangle, CheckBox:indeterminate /template/ Border#NormalRectangle">
+    <Setter Property="Width" Value="13" />
+    <Setter Property="Height" Value="13" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Background" Value="#FFFFFF" />
+    <Setter Property="BorderBrush" Value="#333333" />
+  </Style>
+  <Style Selector="CheckBox:pointerover /template/ Border#NormalRectangle, CheckBox:checked:pointerover /template/ Border#NormalRectangle">
+    <Setter Property="BorderBrush" Value="#0078D7" />
+  </Style>
+  <Style Selector="CheckBox:pressed /template/ Border#NormalRectangle, CheckBox:checked:pressed /template/ Border#NormalRectangle">
+    <Setter Property="Background" Value="#CCE4F7" />
+    <Setter Property="BorderBrush" Value="#005499" />
+  </Style>
+  <Style Selector="CheckBox:disabled /template/ Border#NormalRectangle, CheckBox:checked:disabled /template/ Border#NormalRectangle">
+    <Setter Property="Background" Value="#F0F0F0" />
+    <Setter Property="BorderBrush" Value="#BCBCBC" />
+  </Style>
+
+  <!-- Menus -->
+  <Style Selector="MenuItem">
+    <Setter Property="Padding" Value="8,3" />
+    <Setter Property="MinHeight" Value="22" />
+  </Style>
+
+  <!-- Lists: white text on the highlight color. -->
+  <Style Selector="ListBoxItem">
+    <Setter Property="Padding" Value="4,2" />
+    <Setter Property="MinHeight" Value="17" />
+  </Style>
+  <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter, ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter, ListBoxItem:selected:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="#0078D7" />
+    <Setter Property="Foreground" Value="#FFFFFF" />
+  </Style>
+
+  <!-- Folder tabs: bordered headers, the selected one joined to the white page below. -->
+  <Style Selector="TabItem">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="Normal" />
+    <Setter Property="MinHeight" Value="21" />
+    <Setter Property="Padding" Value="6,2" />
+    <Setter Property="Margin" Value="0,2,-1,0" />
+    <Setter Property="BorderThickness" Value="1,1,1,0" />
+    <Setter Property="BorderBrush" Value="#D9D9D9" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="TabItem:selected">
+    <Setter Property="Margin" Value="-2,0,-3,-1" />
+    <Setter Property="Padding" Value="8,3,8,4" />
+    <Setter Property="ZIndex" Value="1" />
+  </Style>
+  <Style Selector="TabItem /template/ Border#PART_SelectedPipe">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector="TabControl /template/ ContentPresenter#PART_SelectedContentHost, TabControl /template/ ContentPresenter#PART_SelectedContentHost2">
+    <Setter Property="Background" Value="#FFFFFF" />
+    <Setter Property="BorderBrush" Value="#D9D9D9" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <!-- Windows Forms scroll bars are always shown. -->
+  <Style Selector="ScrollViewer">
+    <Setter Property="AllowAutoHide" Value="False" />
+  </Style>
+
+  <!-- Data grids (the splits editor) -->
+  <Style Selector="DataGrid">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="RowHeight" Value="22" />
+    <Setter Property="Background" Value="#FFFFFF" />
+    <Setter Property="BorderBrush" Value="#828790" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="HorizontalGridLinesBrush" Value="#A0A0A0" />
+    <Setter Property="VerticalGridLinesBrush" Value="#A0A0A0" />
+  </Style>
+  <Style Selector="DataGridColumnHeader">
+    <Setter Property="Background" Value="#FFFFFF" />
+    <Setter Property="Foreground" Value="#000000" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="MinHeight" Value="22" />
+    <Setter Property="Padding" Value="4,0" />
+  </Style>
+  <Style Selector="DataGridRow">
+    <Setter Property="MinHeight" Value="22" />
+  </Style>
+  <Style Selector="DataGridCell">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="MinHeight" Value="0" />
+  </Style>
+
+</Styles>

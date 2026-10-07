@@ -44,6 +44,7 @@ public class ThemeAlignmentTests
     [InlineData(AppTheme.WinUI)]
     [InlineData(AppTheme.Libadwaita)]
     [InlineData(AppTheme.MacOS)]
+    [InlineData(AppTheme.Classic)]
     public void TextIsVerticallyCenteredInControls(AppTheme theme)
     {
         AppTheme previousTheme = ThemeManager.Theme;

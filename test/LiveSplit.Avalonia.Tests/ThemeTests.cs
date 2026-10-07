@@ -67,6 +67,8 @@ public class ThemeTests
     [InlineData(AppTheme.Libadwaita, ThemeMode.Light)]
     [InlineData(AppTheme.MacOS, ThemeMode.Dark)]
     [InlineData(AppTheme.MacOS, ThemeMode.Light)]
+    [InlineData(AppTheme.Classic, ThemeMode.Dark)]
+    [InlineData(AppTheme.Classic, ThemeMode.Light)]
     public void ThemedWindowsRender(AppTheme theme, ThemeMode mode)
     {
         AppTheme previousTheme = ThemeManager.Theme;
@@ -124,6 +126,15 @@ public class ThemeTests
             Assert.Equal(Avalonia.Media.Color.Parse("#F3F3F3"), ((Avalonia.Media.ISolidColorBrush)background).Color);
             Dispatcher.UIThread.RunJobs();
             Assert.Equal(Avalonia.Media.Color.Parse("#F3F3F3"), ((Avalonia.Media.ISolidColorBrush)window.Background).Color);
+
+            // Classic is always light, whatever the appearance setting.
+            ThemeManager.Apply(AppTheme.Classic, ThemeMode.Dark);
+            Dispatcher.UIThread.RunJobs();
+            Assert.Equal(Avalonia.Styling.ThemeVariant.Light, window.ActualThemeVariant);
+            Assert.Equal(Avalonia.Media.Color.Parse("#F0F0F0"), ((Avalonia.Media.ISolidColorBrush)window.Background).Color);
+            Assert.True(window.TryFindResource("ControlCornerRadius", window.ActualThemeVariant, out object classicRadius));
+            Assert.Equal(new Avalonia.CornerRadius(0), classicRadius);
+            Assert.Equal(ThemeMode.Dark, ThemeManager.Mode);
 
             ThemeManager.Apply(AppTheme.MacOS, ThemeMode.Light);
             Assert.True(window.TryFindResource("SystemAccentColor", window.ActualThemeVariant, out object accent));

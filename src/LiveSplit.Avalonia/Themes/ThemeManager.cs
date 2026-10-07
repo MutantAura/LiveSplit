@@ -21,7 +21,8 @@ public enum AppTheme
     Fluent,
     WinUI,
     Libadwaita,
-    MacOS
+    MacOS,
+    Classic
 }
 
 public enum ThemeMode
@@ -67,6 +68,14 @@ public static class ThemeManager
         return isMacOS ? AppTheme.MacOS : AppTheme.Libadwaita;
     }
 
+    /// <summary>
+    /// Themes that only have a light appearance, like the Windows Forms look of Classic.
+    /// </summary>
+    public static bool IsLightOnly(AppTheme theme)
+    {
+        return theme == AppTheme.Classic;
+    }
+
     public static string DisplayName(AppTheme theme)
     {
         string name = theme switch
@@ -74,6 +83,7 @@ public static class ThemeManager
             AppTheme.WinUI => "WinUI 3",
             AppTheme.Libadwaita => "Libadwaita",
             AppTheme.MacOS => "macOS",
+            AppTheme.Classic => "Classic (Windows Forms)",
             _ => "Fluent"
         };
 
@@ -184,7 +194,8 @@ public static class ThemeManager
         Theme = theme;
         Mode = mode;
 
-        app.RequestedThemeVariant = mode switch
+        // The mode is kept for the other themes even while a light-only theme is used.
+        app.RequestedThemeVariant = IsLightOnly(theme) ? ThemeVariant.Light : mode switch
         {
             ThemeMode.Light => ThemeVariant.Light,
             ThemeMode.Dark => ThemeVariant.Dark,
@@ -202,6 +213,7 @@ public static class ThemeManager
             AppTheme.WinUI => new WinUITheme(),
             AppTheme.Libadwaita => new LibadwaitaTheme(),
             AppTheme.MacOS => new MacOSTheme(),
+            AppTheme.Classic => new ClassicTheme(),
             _ => null
         };
 

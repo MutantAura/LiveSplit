@@ -278,12 +278,18 @@ public sealed class SettingsWindow : Window
         {
             if (theme.SelectedIndex >= 0 && mode.SelectedIndex >= 0)
             {
-                ThemeManager.Apply(themes[theme.SelectedIndex], modes[mode.SelectedIndex]);
+                AppTheme selected = themes[theme.SelectedIndex];
+                ThemeManager.Apply(selected, modes[mode.SelectedIndex]);
+
+                // Light-only themes ignore the appearance; it's kept for the other themes.
+                mode.IsEnabled = !ThemeManager.IsLightOnly(selected);
+                ToolTip.SetTip(mode, mode.IsEnabled ? null : $"{ThemeManager.DisplayName(selected)} is always light.");
             }
         }
 
         theme.SelectionChanged += (s, e) => ApplyTheme();
         mode.SelectionChanged += (s, e) => ApplyTheme();
+        mode.IsEnabled = !ThemeManager.IsLightOnly(ThemeManager.Theme);
 
         var appearance = new Grid
         {
