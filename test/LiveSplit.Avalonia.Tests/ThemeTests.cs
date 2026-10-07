@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
@@ -151,6 +152,52 @@ public class ThemeTests
             ThemeManager.Apply(AppTheme.Fluent, ThemeMode.Dark);
             Dispatcher.UIThread.RunJobs();
             Assert.Equal(expected, Describe(window));
+            window.Close();
+        }
+        finally
+        {
+            ThemeManager.Apply(previousTheme, previousMode);
+        }
+    }
+
+    /// <summary>
+    /// Regression test: Classic's tabs were offset from the page frame below them. As in Windows
+    /// Forms, the frame starts where the tabs do, unselected tabs stand on the frame's top line
+    /// and the selected tab covers that line, joining the page.
+    /// </summary>
+    [AvaloniaFact]
+    public void ClassicTabsJoinThePageFrame()
+    {
+        AppTheme previousTheme = ThemeManager.Theme;
+        ThemeMode previousMode = ThemeManager.Mode;
+        try
+        {
+            ThemeManager.Apply(AppTheme.Classic, ThemeMode.Light);
+            var window = new SettingsWindow(new StandardSettingsFactory().Create(), "Default", null);
+            window.Show();
+            Dispatcher.UIThread.RunJobs();
+
+            Avalonia.Rect Bounds(Avalonia.Visual v) => new(v.TranslatePoint(default, window)!.Value, v.Bounds.Size);
+            TabControl tabs = window.GetVisualDescendants().OfType<TabControl>().First();
+            Avalonia.Rect page = Bounds(tabs.GetVisualDescendants().OfType<Avalonia.Controls.Presenters.ContentPresenter>().First(x => x.Name == "PART_SelectedContentHost"));
+            TabItem[] items = [.. tabs.GetVisualDescendants().OfType<TabItem>()];
+            Avalonia.Rect selected = Bounds(items[0]);
+            Assert.True(items[0].IsSelected);
+
+            Assert.Equal(Bounds(tabs).Left, page.Left);
+            Assert.Equal(page.Left, selected.Left);
+            Assert.Equal(page.Top + 1, selected.Bottom);
+            foreach (TabItem item in items.Skip(1))
+            {
+                Avalonia.Rect bounds = Bounds(item);
+                Assert.Equal(page.Top, bounds.Bottom);
+                Assert.True(bounds.Top > selected.Top, "Unselected tabs are lower than the selected one.");
+            }
+
+            // The tabs are drawn over the page, so the selected tab hides the frame line below it.
+            Avalonia.Controls.Presenters.ItemsPresenter strip = tabs.GetVisualDescendants().OfType<Avalonia.Controls.Presenters.ItemsPresenter>().First(x => x.Name == "PART_ItemsPresenter");
+            Assert.True(strip.ZIndex > 0);
+
             window.Close();
         }
         finally

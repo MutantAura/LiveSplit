@@ -244,7 +244,18 @@
     <Setter Property="Foreground" Value="#FFFFFF" />
   </Style>
 
-  <!-- Folder tabs: bordered headers, the selected one joined to the white page below. -->
+  <!-- Folder tabs: bordered headers, the selected one joined to the white page below. As in
+       Windows Forms, the page frame starts where the tab strip does, unselected tabs start 2px
+       in and stand on the frame's top line, and the selected tab is 2px wider on each side and
+       1px taller, covering the frame line below it. -->
+  <Style Selector="TabControl">
+    <Setter Property="Padding" Value="0" />
+  </Style>
+  <Style Selector=":is(Window).theme-classic TabControl /template/ ItemsPresenter#PART_ItemsPresenter">
+    <Setter Property="Margin" Value="2,0,2,0" />
+    <!-- Draw the tabs over the page, so the selected tab hides the frame line below it. -->
+    <Setter Property="ZIndex" Value="1" />
+  </Style>
   <Style Selector="TabItem">
     <Setter Property="FontSize" Value="11" />
     <Setter Property="FontWeight" Value="Normal" />
