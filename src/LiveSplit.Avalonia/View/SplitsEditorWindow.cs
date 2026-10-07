@@ -42,6 +42,8 @@ public sealed class SplitsEditorWindow : Window
     private readonly WrapPanel subcategoryPanel;
     private readonly TextBlock speedrunComStatus;
     private readonly DispatcherTimer gameLookupTimer;
+    private readonly Border gameIconPreview;
+    private Action updateGameIconPreview;
     private SrcGame srcGame;
     private IReadOnlyList<SrcCategory> srcCategories = [];
     private IReadOnlyList<SrcVariable> srcVariables = [];
@@ -137,31 +139,37 @@ public sealed class SplitsEditorWindow : Window
         attempts.ValueChanged += (s, e) => run.AttemptCount = (int)(attempts.Value ?? 0);
 
         var gameIcon = new Button { Content = "Set Game Icon..." };
-        gameIcon.Click += async (s, e) => run.GameIcon = await PickImage() ?? run.GameIcon;
+        gameIcon.Click += async (s, e) => await SetGameIcon();
         var removeGameIcon = new Button { Content = "Remove Game Icon" };
-        removeGameIcon.Click += (s, e) => run.GameIcon = null;
+        removeGameIcon.Click += (s, e) => RemoveGameIcon();
+
+        gameIconPreview = CreateGameIconPreview();
 
         var header = new Grid
         {
-            ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,*"),
+            ColumnDefinitions = new ColumnDefinitions("Auto,Auto,*,Auto,*"),
             RowDefinitions = new RowDefinitions("Auto,Auto,Auto,Auto"),
             ColumnSpacing = 8,
             RowSpacing = 6
         };
-        AddCell(header, new TextBlock { Text = "Game", VerticalAlignment = VerticalAlignment.Center }, 0, 0);
-        AddCell(header, gameName, 0, 1);
-        AddCell(header, new TextBlock { Text = "Category", VerticalAlignment = VerticalAlignment.Center }, 0, 2);
-        AddCell(header, categoryBox, 0, 3);
-        AddCell(header, speedrunComStatus, 1, 1);
-        AddCell(header, subcategoryLabel, 1, 2);
-        AddCell(header, subcategoryPanel, 1, 3);
-        AddCell(header, new TextBlock { Text = "Start Timer At", VerticalAlignment = VerticalAlignment.Center }, 2, 0);
-        AddCell(header, offset, 2, 1);
-        AddCell(header, new TextBlock { Text = "Attempts", VerticalAlignment = VerticalAlignment.Center }, 2, 2);
-        AddCell(header, attempts, 2, 3);
+        AddCell(header, new TextBlock { Text = "Game", VerticalAlignment = VerticalAlignment.Center }, 0, 1);
+        AddCell(header, gameName, 0, 2);
+        AddCell(header, new TextBlock { Text = "Category", VerticalAlignment = VerticalAlignment.Center }, 0, 3);
+        AddCell(header, categoryBox, 0, 4);
+        AddCell(header, speedrunComStatus, 1, 2);
+        AddCell(header, subcategoryLabel, 1, 3);
+        AddCell(header, subcategoryPanel, 1, 4);
+        AddCell(header, new TextBlock { Text = "Start Timer At", VerticalAlignment = VerticalAlignment.Center }, 2, 1);
+        AddCell(header, offset, 2, 2);
+        AddCell(header, new TextBlock { Text = "Attempts", VerticalAlignment = VerticalAlignment.Center }, 2, 3);
+        AddCell(header, attempts, 2, 4);
         var iconPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Children = { gameIcon, removeGameIcon } };
-        AddCell(header, iconPanel, 3, 1);
+        AddCell(header, iconPanel, 3, 2);
         Grid.SetColumnSpan(iconPanel, 3);
+
+        // The game icon in the top left, like the Windows version.
+        AddCell(header, gameIconPreview, 0, 0);
+        Grid.SetRowSpan(gameIconPreview, 4);
 
         var methodSelector = new ComboBox { ItemsSource = new[] { "Real Time", "Game Time" }, SelectedIndex = 0 };
         methodSelector.SelectionChanged += (s, e) =>
@@ -632,6 +640,81 @@ public sealed class SplitsEditorWindow : Window
         run.ClearTimes();
         Refresh();
     }
+
+    #region Game icon
+
+    private const double GameIconSize = 120;
+
+    /// <summary>
+    /// A preview of the game icon. Double-clicking it picks a new icon, and right-clicking it
+    /// offers to set or remove the icon, like in the Windows version.
+    /// </summary>
+    private Border CreateGameIconPreview()
+    {
+        var image = new Image { Stretch = Stretch.Uniform, Margin = new Thickness(6) };
+        var placeholder = new TextBlock
+        {
+            Text = "No game icon\n(double-click to set)",
+            TextAlignment = TextAlignment.Center,
+            TextWrapping = TextWrapping.Wrap,
+            Foreground = Brushes.Gray,
+            FontSize = 11,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        var preview = new Border
+        {
+            Width = GameIconSize,
+            Height = GameIconSize,
+            Margin = new Thickness(0, 0, 4, 0),
+            VerticalAlignment = VerticalAlignment.Top,
+            Background = new SolidColorBrush(Colors.Gray, 0.15),
+            BorderBrush = new SolidColorBrush(Colors.Gray, 0.6),
+            BorderThickness = new Thickness(1),
+            Child = new Panel { Children = { image, placeholder } }
+        };
+        ToolTip.SetTip(preview, "Double-click to change the game icon");
+
+        preview.DoubleTapped += async (s, e) =>
+        {
+            e.Handled = true;
+            await SetGameIcon();
+        };
+
+        var remove = new MenuItem { Header = "Remove Game Icon" };
+        remove.Click += (s, e) => RemoveGameIcon();
+        var set = new MenuItem { Header = "Set Game Icon..." };
+        set.Click += async (s, e) => await SetGameIcon();
+        preview.ContextMenu = new ContextMenu { ItemsSource = new[] { set, remove } };
+        preview.ContextMenu.Opening += (s, e) => remove.IsEnabled = run.GameIcon != null;
+
+        updateGameIconPreview = () =>
+        {
+            image.Source = run.GameIcon?.ToBitmap();
+            placeholder.IsVisible = image.Source == null;
+        };
+        updateGameIconPreview();
+        return preview;
+    }
+
+    private async Task SetGameIcon()
+    {
+        Drawing.Image image = await ImagePicker();
+        if (image != null)
+        {
+            run.GameIcon = image;
+            updateGameIconPreview();
+        }
+    }
+
+    private void RemoveGameIcon()
+    {
+        run.GameIcon = null;
+        updateGameIconPreview();
+    }
+
+    #endregion
 
     private Task SetSegmentIcon()
     {

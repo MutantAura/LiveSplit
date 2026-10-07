@@ -242,6 +242,71 @@ public class SplitsEditorTests
         window.Close();
     }
 
+    private static Drawing.Image CreatePng()
+    {
+        using var bitmap = new WriteableBitmap(new PixelSize(8, 8), new Vector(96, 96), Avalonia.Platform.PixelFormats.Bgra8888, Avalonia.Platform.AlphaFormat.Premul);
+        using var stream = new System.IO.MemoryStream();
+        bitmap.Save(stream);
+        return new Drawing.Image(stream.ToArray());
+    }
+
+    [AvaloniaFact]
+    public void ShowsTheGameIconAndDoubleClickingItPicksANewOne()
+    {
+        IRun run = new Run(new StandardComparisonGeneratorsFactory()) { GameName = "Celeste", CategoryName = "Any%" };
+        run.AddSegment("Summit");
+        var state = new LiveSplitState(run, null, null, null, new StandardSettingsFactory().Create());
+        var window = new SplitsEditorWindow(state, new TimerModel { CurrentState = state }, new FakeSpeedrunCom().Api);
+        Drawing.Image picked = CreatePng();
+        int pickerCalls = 0;
+        window.ImagePicker = () =>
+        {
+            pickerCalls++;
+            return Task.FromResult(picked);
+        };
+        window.Show();
+        Wait(() => window.PendingLookup.IsCompleted);
+        for (int i = 0; i < 4; i++)
+        {
+            Dispatcher.UIThread.RunJobs();
+            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+        }
+
+        // The preview sits in the top left of the window.
+        Border preview = window.GetVisualDescendants().OfType<Border>().Single(x => ToolTip.GetTip(x) as string == "Double-click to change the game icon");
+        Point topLeft = preview.TranslatePoint(default, window)!.Value;
+        Assert.True(topLeft.X < 20 && topLeft.Y < 20, $"The preview is at {topLeft}.");
+
+        Image image = preview.GetVisualDescendants().OfType<Image>().Single();
+        TextBlock placeholder = preview.GetVisualDescendants().OfType<TextBlock>().Single();
+        Assert.Null(image.Source);
+        Assert.True(placeholder.IsVisible);
+
+        Point center = preview.TranslatePoint(new Point(preview.Bounds.Width / 2, preview.Bounds.Height / 2), window)!.Value;
+        window.MouseDown(center, MouseButton.Left);
+        window.MouseUp(center, MouseButton.Left);
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(0, pickerCalls);
+
+        window.MouseDown(center, MouseButton.Left);
+        window.MouseUp(center, MouseButton.Left);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal(1, pickerCalls);
+        Assert.Same(picked, run.GameIcon);
+        Assert.NotNull(image.Source);
+        Assert.False(placeholder.IsVisible);
+
+        // The existing button updates the preview too.
+        Button remove = window.GetLogicalDescendants().OfType<Button>().Distinct().Single(x => x.Content as string == "Remove Game Icon");
+        remove.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+        Assert.Null(run.GameIcon);
+        Assert.Null(image.Source);
+        Assert.True(placeholder.IsVisible);
+
+        window.Close();
+    }
+
     [AvaloniaFact]
     public void UnknownGamesKeepTheDefaultCategories()
     {
